@@ -19,4 +19,5 @@ build-backend = "setuptools.build_meta"
 [tool.poetry.group.dev.dependencies]
 setuptools = "^75.8.0"
 cython = "^3.0.12"
+pathlib = "^1.0.1"
 
