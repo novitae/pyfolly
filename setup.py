@@ -72,6 +72,13 @@ elif sys.platform.startswith('linux'):  # Linux
 else:  # Other platforms
     raise ValueError(f'Unknown {sys.platform=}')
 
+for include_dir in include_dirs:
+    if (Path(include_dir) / "folly").exists():
+        break
+else:
+    raise FileNotFoundError( 'Could not find the include for folly in any '
+                             'of the include directories:', include_dirs )
+
 include_dirs.extend(["."])
 compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
 base_libraries = ['folly', 'glog', 'double-conversion', 'fmt']
