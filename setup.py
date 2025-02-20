@@ -30,8 +30,8 @@ base_libraries = ['folly', 'glog', 'double-conversion', 'fmt']
 
 exts = [
     Extension(
-        "afolly.executor",
-        sources=["afolly/executor.pyx", "afolly/ProactorExecutor.cpp"],
+        "folly.executor",
+        sources=["folly/executor.pyx", "folly/python/ProactorExecutor.cpp"],
         libraries=["folly", "glog"],
         extra_compile_args=[
             *compile_args,
@@ -43,7 +43,7 @@ exts = [
 ]
 
 setup(
-    name="afolly",
+    name="folly",
     version="0.1.0",
     packages=["folly"],
     package_data={"": ["*.pxd", "*.h"]},
