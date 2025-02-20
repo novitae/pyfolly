@@ -12,3 +12,4 @@ folly/**/*.py
 folly/**/*.pyi
 folly/**/*.pxd
 folly/**/*.pyx
+folly/**/*.so
