@@ -1,9 +1,34 @@
 import sys
 import platform
+from pathlib import Path
+from git import Repo
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
-compile_args = ['-std=gnu++20']
+current_directory = Path().absolute()
+folly_source_path = current_directory / "folly-source"
+folly_python_path = current_directory / "folly"
+assert Repo(current_directory).submodule(folly_source_path.name).module_exists(), \
+    "The `folly-source` submodule is not properly initalized."
+folly_py_src_path = folly_source_path / "folly" / "python"
+assert folly_py_src_path.exists(), "Couldn't find the `folly/python` directory in the folly-source submodule."
+
+def copy_file_to(source: Path, destination: Path):
+    assert source.exists()
+    if destination.parent.exists() is False:
+        destination.parent.mkdir(parents=True)
+    with open(source, "rb") as read, open(destination, "wb") as write:
+        write.write(read.read())
+
+for source, destination in [
+    ((folly_py_src_path / "__init__.pxd"), (folly_python_path / "__init__.pxd")),
+
+    ((folly_py_src_path / "executor.pxd"), (folly_python_path / "executor.pxd")),
+    ((folly_py_src_path / "executor.pyx"), (folly_python_path / "executor.pyx")),
+    ((folly_py_src_path / "ProactorExecutor.h"), (folly_python_path / "python" / "ProactorExecutor.h")),
+    ((folly_py_src_path / "ProactorExecutor.cpp"), (folly_python_path / "python" / "ProactorExecutor.cpp")),
+]:
+    copy_file_to(source=source, destination=destination)
 
 if sys.platform == 'darwin':  # macOS
     if platform.machine() == 'arm64':  # Apple Silicon
@@ -12,20 +37,17 @@ if sys.platform == 'darwin':  # macOS
     else:  # Intel macOS
         library_dirs = ['/usr/lib']
         include_dirs = ['/usr/include']
-
 elif sys.platform == 'win32':  # Windows
     library_dirs = ['C:\\Program Files\\Library\\lib']
     include_dirs = ['C:\\Program Files\\Library\\include']
-
 elif sys.platform.startswith('linux'):  # Linux
     library_dirs = ['/usr/lib', '/usr/local/lib']
     include_dirs = ['/usr/include', '/usr/local/include']
-
 else:  # Other platforms
     raise ValueError(f'Unknown {sys.platform=}')
 
 include_dirs.extend(["."])
-
+compile_args = ['-std=gnu++20']
 base_libraries = ['folly', 'glog', 'double-conversion', 'fmt']
 
 exts = [
@@ -44,7 +66,7 @@ exts = [
 
 setup(
     name="folly",
-    version="0.1.0",
+    version=max(Repo(folly_source_path).tags, key=lambda t: t.commit.committed_datetime).name,
     packages=["folly"],
     package_data={"": ["*.pxd", "*.h"]},
     setup_requires=["cython"],
