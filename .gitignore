@@ -1,6 +1,14 @@
 .venv
 .DS_Store
 .vscode
+*.egg-info
+dist
 
 build
 __pycache__
+folly/**/*.h
+folly/**/*.cpp
+folly/**/*.py
+folly/**/*.pyi
+folly/**/*.pxd
+folly/**/*.pyx
