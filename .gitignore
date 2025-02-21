@@ -3,6 +3,7 @@
 .vscode
 *.egg-info
 dist
+folly-source-*.zip
 
 build
 __pycache__
