@@ -3,7 +3,7 @@ from zipfile import ZipFile
 import requests
 import sys
 import platform
-from distutils import log
+import os
 
 current_directory = Path().absolute()
 
@@ -16,6 +16,7 @@ else:
 
 folly_source_filename = "folly-source-{version}.zip"
 folly_python_path = current_directory / "folly"
+folly_python_test_path = current_directory / "test"
 folly_py_src_path = Path("./folly/python")
 
 for folly_source_path in Path().glob("folly-source-*.zip"):
@@ -80,3 +81,12 @@ def copy_file_to(z: ZipFile, source: Path, destination: Path):
         destination.parent.mkdir(parents=True)
     with open(destination, "wb") as write:
         write.write(z.read(str(source)))
+
+def remove_recursive(path: Path, exclude_names: list = None):
+    assert path.is_dir()
+    for file in path.glob("**/*"):
+        if file.is_dir():
+            continue
+        if exclude_names is None or file.name not in exclude_names:
+            print(file)
+            file.unlink()

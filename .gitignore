@@ -4,13 +4,15 @@
 *.egg-info
 dist
 folly-source-*.zip
-
+*.so
 build
 __pycache__
+
 folly/**/*.h
 folly/**/*.cpp
 folly/**/*.py
 folly/**/*.pyi
 folly/**/*.pxd
 folly/**/*.pyx
-folly/**/*.so
+!folly/python/test/__init__.py
+!folly/python/test/setup.py
