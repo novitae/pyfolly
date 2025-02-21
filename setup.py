@@ -44,10 +44,9 @@ with ZipFile(folly_source_path) as z:
 
         ((folly_py_src_path / "test/IOBufTestUtils.h"), (folly_python_path / "python/test/IOBufTestUtils.h")),
         ((folly_py_src_path / "test/IOBufTestUtils.cpp"), (folly_python_path / "python/test/IOBufTestUtils.cpp")),
-        # ((folly_py_src_path / "test/IOBufTestUtils.h"), (folly_python_test_path / "IOBufTestUtils.h")),
-        # ((folly_py_src_path / "test/IOBufTestUtils.cpp"), (folly_python_test_path / "IOBufTestUtils.cpp")),
         ((folly_py_src_path / "test/iobuf_helper.pxd"), (folly_python_path / "python/test/iobuf_helper.pxd")),
         ((folly_py_src_path / "test/iobuf_helper.pyx"), (folly_python_path / "python/test/iobuf_helper.pyx")),
+        ((folly_py_src_path / "test/iobuf.py"), (folly_python_path / "python/test/iobuf.py")),
     ]:
         copy_file_to(z=z, source=source, destination=destination)
 

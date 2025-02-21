@@ -88,5 +88,4 @@ def remove_recursive(path: Path, exclude_names: list = None):
         if file.is_dir():
             continue
         if exclude_names is None or file.name not in exclude_names:
-            print(file)
             file.unlink()

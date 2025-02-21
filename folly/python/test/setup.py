@@ -11,9 +11,12 @@ include_dirs = ['/opt/homebrew/include', ".", "../../.."]
 compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
 library_dirs = ['/opt/homebrew/lib']
 
-iobuf_api_path = (folly_python_path / "iobuf_api.h")
-assert iobuf_api_path.exists()
-(folly_python_path / "python" / "iobuf_api.h").symlink_to(iobuf_api_path)
+def link(source: Path, dest: Path):
+    assert source.exists() and source.is_file()
+    if dest.is_symlink() is False:
+        dest.symlink_to(source)
+
+link(folly_python_path / "iobuf_api.h", folly_python_path / "python" / "iobuf_api.h")
 
 exts = [
     Extension(
