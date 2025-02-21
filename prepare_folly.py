@@ -6,13 +6,7 @@ import platform
 import os
 
 current_directory = Path().absolute()
-
-for arg in sys.argv:
-    if arg.startswith("--folly-version="):
-        custom_version = arg.split("=", 1).pop()
-        break
-else:
-    custom_version = None
+custom_version = os.getenv("PYTHON_FOLLY_VERSION")
 
 folly_source_filename = "folly-source-{version}.zip"
 folly_python_path = current_directory / "folly"
