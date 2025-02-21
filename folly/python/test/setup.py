@@ -12,7 +12,7 @@ compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_
 library_dirs = ['/opt/homebrew/lib']
 
 def link(source: Path, dest: Path):
-    assert source.exists() and source.is_file()
+    assert source.exists() and source.is_file(), f"Missing {source}"
     if dest.is_symlink() is False:
         dest.symlink_to(source)
 
