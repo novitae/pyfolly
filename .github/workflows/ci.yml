@@ -32,7 +32,7 @@ jobs:
       - name: Downloading folly
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 ./download.py
+        run: poetry run python3 ./download.py
 
       - name: Building folly
         run: |
@@ -42,8 +42,8 @@ jobs:
             exit 1
           fi
           cd FOLLY_SOURCE_DIR
-          python3 ./build/fbcode_builder/getdeps.py build
-          FOLLY_BUILD_DIR=$(python3 ./build/fbcode_builder/getdeps.py show-inst-dir)
+          poetry run python3 ./build/fbcode_builder/getdeps.py build
+          FOLLY_BUILD_DIR=$(poetry run python3 ./build/fbcode_builder/getdeps.py show-inst-dir)
           cd ..
           echo "FOLLY_BUILD_DIR=$FOLLY_BUILD_DIR" >> $GITHUB_ENV
 
