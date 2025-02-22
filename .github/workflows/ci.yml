@@ -41,7 +41,7 @@ jobs:
             echo "Error: No directory matching 'folly-source-*' found."
             exit 1
           fi
-          cd FOLLY_SOURCE_DIR
+          cd $FOLLY_SOURCE_DIR
           poetry run python3 ./build/fbcode_builder/getdeps.py build
           FOLLY_BUILD_DIR=$(poetry run python3 ./build/fbcode_builder/getdeps.py show-inst-dir)
           cd ..
