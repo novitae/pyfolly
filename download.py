@@ -44,13 +44,13 @@ def main():
     compressed_folly_source_path.unlink()
     print("Decompressed")
 
-    for file in Path("replacements").glob("**/*"):
+    for file in Path("./replacements").glob("**/*"):
         if file.name == "README.md" or file.is_dir():
             continue
-        source_path = file.relative_to("replacements")
+        source_path = file.relative_to("./replacements").absolute()
         with open(source_path, "rb") as read:
             content = read.read()
-        destination = Path("folly-source", source_path)
+        destination = Path("./folly-source", source_path).absolute()
         with open(destination, "wb") as write:
             write.write(content)
         print(f"Replaced {destination} by {source_path}")
