@@ -4,7 +4,7 @@ from setuptools import Extension, setup
 from pathlib import Path
 import sys
 
-folly_python_path = Path("/Users/n/follython/folly")
+folly_python_path = Path().absolute().parent.parent
 assert (folly_python_path / "__init__.pxd").exists(), "Normal `setup.py` must be ran prior."
 
 include_dirs = ['/opt/homebrew/include', ".", "../../.."]
