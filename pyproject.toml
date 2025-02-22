@@ -1,6 +1,6 @@
 [project]
 name = "folly"
-version = "0.1.0"
+dynamic = ["version"]
 description = ""
 authors = [
   { name = "ae", email = "85891169+novitae@users.noreply.github.com" }
