@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+        python-version: [3.12, 3.13]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install folly (Windows)
+        if: startsWith(runner.os, 'Windows')
+        run: |
+          c:\vcpkg\vcpkg.exe install folly
+
+      - name: Install folly (macOS)
+        if: startsWith(runner.os, 'macOS')
+        run: |
+          brew install folly
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          poetry-version: 'latest'
+
+      - name: Install dependencies
+        run: |
+          # Installs all dependencies (including dev dependencies) as declared in pyproject.toml
+          poetry install
+
+      - name: Build (main build)
+        run: |
+          # Build your main project in-place
+          poetry run python setup.py build_ext --inplace
+
+      - name: Test (depends on build)
+        run: |
+          # Build the test extension
+          cd folly/python/test
+          poetry run python setup.py build_ext --inplace
+          cd ../../..
+
+          # Now run tests
+          poetry run pytest
