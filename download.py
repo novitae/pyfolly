@@ -49,7 +49,7 @@ def main():
             continue
         with open(source_path, "rb") as read:
             content = read.read()
-        destination = Path("./folly-source", source_path.relative_to("./replacements")).absolute()
+        destination = Path(folly_source_path, source_path.relative_to("./replacements")).absolute()
         with open(destination, "wb") as write:
             write.write(content)
         print(f"Replaced {destination} by {source_path}")
