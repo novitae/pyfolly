@@ -37,6 +37,7 @@ else:
     response = requests.get(
         "https://api.github.com/repos/facebook/folly/releases/{}".format(custom_version or "latest"),
         allow_redirects=False,
+        headers={"Authorization": "Bearer " + ghtk} if (ghtk := os.getenv('GITHUB_TOKEN')) else None,
     )
     if response.status_code == 404:
         raise ValueError("Couldn't find any folly release named {}".format(response.url.rsplit("/", 1).pop()))

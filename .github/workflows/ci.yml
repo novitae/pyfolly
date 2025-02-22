@@ -44,6 +44,8 @@ jobs:
           poetry install --all-groups
 
       - name: Build (main build)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Build your main project in-place
           poetry run python setup.py build_ext --inplace
