@@ -44,10 +44,9 @@ def main():
     compressed_folly_source_path.unlink()
     print("Decompressed")
 
-    for file in Path("./replacements").glob("**/*"):
-        if file.name == "README.md" or file.is_dir():
+    for source_path in Path("./replacements").glob("**/*"):
+        if source_path.name == "README.md" or source_path.is_dir():
             continue
-        source_path = file.relative_to("./replacements").absolute()
         with open(source_path, "rb") as read:
             content = read.read()
         destination = Path("./folly-source", source_path).absolute()
