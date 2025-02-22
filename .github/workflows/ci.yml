@@ -21,39 +21,42 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install folly (Windows)
-        if: startsWith(runner.os, 'Windows')
-        run: |
-          c:\vcpkg\vcpkg.exe install folly
-
-      - name: Install folly (macOS)
-        if: startsWith(runner.os, 'macOS')
-        run: |
-          brew install folly
-
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           poetry-version: 'latest'
 
       - name: Install dependencies
+        run: poetry install --all-groups
+
+      - name: Downloading folly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 ./download.py
+
+      - name: Building folly
         run: |
-          # Installs all dependencies (including dev dependencies) as declared in pyproject.toml
-          poetry install --all-groups
+          FOLLY_SOURCE_DIR=$(find . -maxdepth 1 -type d -name 'folly-source-*' | head -n 1)
+          if [ -z "$FOLLY_SOURCE_DIR" ]; then
+            echo "Error: No directory matching 'folly-source-*' found."
+            exit 1
+          fi
+          cd FOLLY_SOURCE_DIR
+          python3 ./build/fbcode_builder/getdeps.py build
+          FOLLY_BUILD_DIR=$(python3 ./build/fbcode_builder/getdeps.py show-inst-dir)
+          cd ..
+          echo "FOLLY_BUILD_DIR=$FOLLY_BUILD_DIR" >> $GITHUB_ENV
 
       - name: Build (main build)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Build your main project in-place
-          poetry run python setup.py build_ext --inplace
+          FOLLY_BUILD_DIR: $FOLLY_BUILD_DIR
+        run: poetry run python setup.py build_ext --inplace
 
       - name: Test (depends on build)
+        env:
+          FOLLY_BUILD_DIR: $FOLLY_BUILD_DIR
         run: |
-          # Build the test extension
-          cd folly/python/test
+          cd ./folly/python/test
           poetry run python setup.py build_ext --inplace
           cd ../../..
-
-          # Now run tests
           poetry run pytest

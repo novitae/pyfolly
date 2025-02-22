@@ -3,9 +3,10 @@
 .vscode
 *.egg-info
 dist
-folly-source-*.zip
+folly-source-*
 *.so
 build
+!replacements/build
 __pycache__
 
 folly/**/*.h

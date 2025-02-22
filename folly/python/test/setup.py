@@ -1,15 +1,35 @@
 from Cython.Build import cythonize
 from setuptools import Extension, setup
-
+import os
 from pathlib import Path
 import sys
 
 folly_python_path = Path().absolute().parent.parent
 assert (folly_python_path / "__init__.pxd").exists(), "Normal `setup.py` must be ran prior."
 
-include_dirs = ['/opt/homebrew/include', ".", "../../.."]
+if _folly_build_dir := os.getenv("FOLLY_BUILD_DIR"):
+    folly_build_dir = Path(_folly_build_dir)
+else:
+    raise ValueError('FOLLY_BUILD_DIR is not defined')
+
+include_dirs = []
+library_dirs = []
+
+folly_installed_dir = folly_build_dir / "installed"
+assert folly_installed_dir.exists()
+for installed_lib in folly_installed_dir.iterdir():
+    if installed_lib.is_dir() is False:
+        continue
+    installed_lib_include = installed_lib / "include"
+    assert installed_lib_include.exists()
+    include_dirs.append(str(installed_lib_include.absolute()))
+    installed_lib_library = installed_lib / "lib"
+    assert installed_lib_library.exists()
+    include_dirs.append(str(installed_lib_library.absolute()))
+
+include_dirs.extend([".", "../../.."])
+
 compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
-library_dirs = ['/opt/homebrew/lib']
 
 def link(source: Path, dest: Path):
     assert source.exists() and source.is_file(), f"Missing {source}"
