@@ -17,6 +17,13 @@ build-backend = "setuptools.build_meta"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"
 
+
+[tool.poetry.group.build.dependencies]
+pathlib = "^1.0.1"
+requests = "^2.32.3"
+cython = "^3.0.12"
+setuptools = "^75.8.0"
+
 [tool.pytest.ini_options]
 addopts = '--ignore=folly/python/test/setup.py'
 python_files = ["folly/python/test/*.py"]

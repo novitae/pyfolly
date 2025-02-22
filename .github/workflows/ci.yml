@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: |
           # Installs all dependencies (including dev dependencies) as declared in pyproject.toml
-          poetry install
+          poetry install --all-groups
 
       - name: Build (main build)
         run: |
