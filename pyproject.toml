@@ -1,3 +1,15 @@
+[project]
+name = "folly"
+version = "0.1.0"
+description = ""
+authors = [
+  { name = "ae", email = "85891169+novitae@users.noreply.github.com" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+]
+
 [build-system]
 requires = ["setuptools", "cython", "pathlib", "requests"]
 build-backend = "setuptools.build_meta"
