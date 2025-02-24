@@ -23,7 +23,7 @@ jobs:
       - name: Installing folly (via Homebrew)
         run: |
           brew install folly
-          echo "FOLLY_VERSION=$(brew info folly --json | jq -r '.[0].installed[0].version')" >> $GITHUB_ENV
+          echo "FOLLY_VERSION=$(brew info folly --json | jq -r '.[0].installed[0].linked_keg')" >> $GITHUB_ENV
           echo "INCLUDE_DIR=$(brew --prefix)/include" >> $GITHUB_ENV
           echo "LIBRARY_DIR=$(brew --prefix)/lib" >> $GITHUB_ENV
 
