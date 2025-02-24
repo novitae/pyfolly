@@ -47,12 +47,15 @@ jobs:
         run: poetry run python3 ./download.py
 
       - name: Build
-        run: poetry run python setup.py build_ext --inplace -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
+        run: |
+          poetry run python setup.py build_ext --inplace
+          # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
 
       - name: Build tests
         run: |
           cd folly/python/test
-          poetry run python setup.py build_ext --inplace -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
+          poetry run python setup.py build_ext --inplace
+          # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
 
       - name: Run tests
         run: poetry run python -m pytest
