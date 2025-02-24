@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest]
-        python-version: [3.12, 3.13]
+        python-version: [3.9, 3.10, 3.11, 3.12, 3.13]
 
     steps:
       - name: Check out repository
@@ -55,7 +55,7 @@ jobs:
         env:
           FOLLY_BUILD_DIR: $FOLLY_BUILD_DIR
         run: |
-          cd ./folly/python/test
+          cd folly/python/test
           poetry run python setup.py build_ext --inplace -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
           cd ../../..
-          poetry run pytest
+          poetry run python -m pytest
