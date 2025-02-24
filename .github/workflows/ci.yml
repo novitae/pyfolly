@@ -55,4 +55,4 @@ jobs:
           poetry run python setup.py build_ext -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }} --inplace
 
       - name: Run tests
-          poetry run python -m pytest folly
+        run: poetry run python -m pytest
