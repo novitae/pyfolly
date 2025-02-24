@@ -42,7 +42,7 @@ def main():
     with zipfile.ZipFile(compressed_folly_source_path) as z:
         z.extractall(folly_source_path)
     compressed_folly_source_path.unlink()
-    print("Decompressed")
+    print(f"Decompressed as {folly_source_path}")
 
     for source_path in Path("./replacements").glob("**/*"):
         if source_path.name == "README.md" or source_path.is_dir():

@@ -23,7 +23,7 @@ jobs:
       - name: Installing folly (via Homebrew)
         run: |
           brew install folly
-          echo "FOLLY_VERSION=$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
+          echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
           echo "INCLUDE_DIR=$(brew --prefix)/include" >> $GITHUB_ENV
           echo "LIBRARY_DIR=$(brew --prefix)/lib" >> $GITHUB_ENV
 
@@ -43,7 +43,7 @@ jobs:
       - name: Downloading Folly files
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FOLLY_VERSION: v${{ env.FOLLY_VERSION }}
+          FOLLY_VERSION: ${{ env.FOLLY_VERSION }}
         run: poetry run python3 ./download.py -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
 
       - name: Build (main build)
