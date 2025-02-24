@@ -1,7 +1,6 @@
 import os
 import sys
 from pathlib import Path
-from datetime import datetime
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
@@ -77,7 +76,13 @@ for source, destination in [
 (folly_python_path / "iobuf_ext.h").symlink_to(folly_python_path / "python" / "iobuf_ext.h")
 (folly_python_path / "iobuf_ext.cpp").symlink_to(folly_python_path / "python" / "iobuf_ext.cpp")
 
-include_dirs = ["."]
+include_dirs, library_dirs = [], []
+for (name, l) in [("FOLLY_PY_IPATH", include_dirs), ("FOLLY_PY_LPATH", library_dirs)]:
+    value = os.getenv(name)
+    if value is None:
+        continue
+    l.extend(value.split(":"))
+include_dirs.extend(["."])
 compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
 
 exts = [
@@ -87,6 +92,7 @@ exts = [
         libraries=["folly", "glog"],
         extra_compile_args=compile_args,
         include_dirs=include_dirs,
+        library_dirs=library_dirs,
     ),
     Extension(
         "folly.iobuf",
@@ -94,6 +100,7 @@ exts = [
         libraries=["folly", "glog"],
         extra_compile_args=compile_args,
         include_dirs=include_dirs,
+        library_dirs=library_dirs,
     )
 ]
 
@@ -104,5 +111,10 @@ setup(
     package_data={"": ["*.pxd", "*.h"]},
     setup_requires=["cython"],
     zip_safe=False,
-    ext_modules=cythonize(exts, compiler_directives={"language_level": 3}),
+    ext_modules=cythonize(
+        exts,
+        compiler_directives={
+            "language_level": 3
+        }
+    ),
 )

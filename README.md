@@ -20,9 +20,17 @@ This repository doesn't contain any code from folly, but rather a way to organis
 - Supports python 3.13:
   - By adding the macro `-D_Py_Is_Finalizing=Py_Is_Finalizing` when compiling.
   - By updating the `ninja` library dependency.
-### Installation
 ---
-
+### Installation
+#### MacOS
+```
+brew install folly
+```
+##### Automatically
+##### Manually
+```
+FOLLY_PY_IPATH="$(brew --prefix)/include" FOLLY_PY_LPATH="$(brew --prefix)/lib" pip install .
+```
 Build:
 ```
 py setup.py build_ext --inplace
