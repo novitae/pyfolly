@@ -5,10 +5,10 @@ import shutil
 from pathlib import Path
 
 def main():
-    custom_version = os.getenv("FOLLY_VERSION") or "latest"
+    url = "https://api.github.com/repos/facebook/folly/releases/"
+    url += f"tags/{custom_version}" if (custom_version := os.getenv("FOLLY_VERSION")) else "latest"
     response = requests.get(
-        f"https://api.github.com/repos/facebook/folly/releases/{custom_version}",
-        headers={"Authorization": f"Bearer {token}"} if (token := os.environ.get("GITHUB_TOKEN")) else {}
+        url, headers={"Authorization": f"Bearer {token}"} if (token := os.environ.get("GITHUB_TOKEN")) else {}
     )
     print("Queried API")
     response.raise_for_status()
