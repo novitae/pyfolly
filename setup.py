@@ -1,5 +1,6 @@
 import os
 import sys
+import platform
 from pathlib import Path
 from Cython.Build import cythonize
 from setuptools import Extension, setup
@@ -76,12 +77,25 @@ for source, destination in [
 (folly_python_path / "iobuf_ext.h").symlink_to(folly_python_path / "python" / "iobuf_ext.h")
 (folly_python_path / "iobuf_ext.cpp").symlink_to(folly_python_path / "python" / "iobuf_ext.cpp")
 
-include_dirs, library_dirs = [], []
-for (name, l) in [("FOLLY_PY_IPATH", include_dirs), ("FOLLY_PY_LPATH", library_dirs)]:
-    value = os.getenv(name)
-    if value is None:
-        continue
-    l.extend(value.split(":"))
+if (FOLLY_PY_LPATH := os.getenv("FOLLY_PY_LPATH")) and (FOLLY_PY_IPATH := os.getenv("FOLLY_PY_IPATH")):
+    library_dirs = FOLLY_PY_LPATH.split(":")
+    include_dirs = FOLLY_PY_IPATH.split(":")
+elif sys.platform == 'darwin':  # macOS
+    if platform.machine() == 'arm64':  # Apple Silicon
+        library_dirs = ['/opt/homebrew/lib']
+        include_dirs = ['/opt/homebrew/include']
+    else:  # Intel macOS
+        library_dirs = ['/usr/lib']
+        include_dirs = ['/usr/include']
+# elif sys.platform == 'win32':  # Windows
+#     library_dirs = ['C:\\Program Files\\Library\\lib']
+#     include_dirs = ['C:\\Program Files\\Library\\include']
+# elif sys.platform.startswith('linux'):  # Linux
+#     library_dirs = ['/usr/lib', '/usr/local/lib']
+#     include_dirs = ['/usr/include', '/usr/local/include']
+else:  # Other platforms
+    raise ValueError(f'Unknown {sys.platform=}')
+
 include_dirs.extend(["."])
 compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
 
@@ -107,6 +121,9 @@ exts = [
 setup(
     name="folly",
     version=version,
+    description="",
+    author="ae",
+    author_email="85891169+novitae@users.noreply.github.com",
     packages=["folly"],
     package_data={"": ["*.pxd", "*.h"]},
     setup_requires=["cython"],
@@ -117,4 +134,5 @@ setup(
             "language_level": 3
         }
     ),
+    python_requires=">=3.9",
 )

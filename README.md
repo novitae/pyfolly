@@ -25,20 +25,32 @@ This repository doesn't contain any code from folly, but rather a way to organis
 #### MacOS
 ```
 brew install folly
+pip install git+https://github.com/novitae/folly.git
 ```
-##### Automatically
-##### Manually
+#### Else
+You can set the custom include and lib path to folly the following way:
+```sh
+FOLLY_PY_IPATH=... # For include
+FOLLY_PY_LPATH=... # For lib
 ```
+On MacOS, you could install this way:
+```sh
 FOLLY_PY_IPATH="$(brew --prefix)/include" FOLLY_PY_LPATH="$(brew --prefix)/lib" pip install .
 ```
-Build:
+You can set many by separating them by `:`:
+```sh
+FOLLY_PY_IPATH="/opt/homebrew/lib:/usr/lib"
+# For `/opt/homebrew/lib` and `/usr/lib`
 ```
-py setup.py build_ext --inplace
-```
-Test:
-```
-cd folly/python/test
-py setup.py build_ext --inplace
-cd ../../..
-python -m pytest
-```
+
+> Build:
+> ```
+> py setup.py build_ext --inplace
+> ```
+> Test:
+> ```
+> cd folly/python/test
+> py setup.py build_ext --inplace
+> cd ../../..
+> python -m pytest
+> ```
