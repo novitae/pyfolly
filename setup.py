@@ -77,11 +77,6 @@ for source, destination in [
 (folly_python_path / "iobuf_ext.h").symlink_to(folly_python_path / "python" / "iobuf_ext.h")
 (folly_python_path / "iobuf_ext.cpp").symlink_to(folly_python_path / "python" / "iobuf_ext.cpp")
 
-if _folly_build_dir := os.getenv("FOLLY_BUILD_DIR"):
-    folly_build_dir = Path(_folly_build_dir)
-else:
-    raise ValueError('FOLLY_BUILD_DIR is not defined')
-
 include_dirs = ["."]
 compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
 

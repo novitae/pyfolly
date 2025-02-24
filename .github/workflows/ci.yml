@@ -46,16 +46,13 @@ jobs:
           FOLLY_VERSION: ${{ env.FOLLY_VERSION }}
         run: poetry run python3 ./download.py
 
-      - name: Build (main build)
-        env:
-          FOLLY_BUILD_DIR: $FOLLY_BUILD_DIR
-        run: poetry run python setup.py build_ext --inplace -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
+      - name: Build
+        run: poetry run python setup.py build_ext -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }} --inplace
 
-      - name: Test (depends on build)
-        env:
-          FOLLY_BUILD_DIR: $FOLLY_BUILD_DIR
+      - name: Build tests
         run: |
           cd folly/python/test
-          poetry run python setup.py build_ext --inplace -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
-          cd ../../..
-          poetry run python -m pytest
+          poetry run python setup.py build_ext -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }} --inplace
+
+      - name: Run tests
+          poetry run python -m pytest folly
