@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from datetime import datetime
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
@@ -24,7 +25,7 @@ current_directory = Path().absolute()
 custom_version = os.getenv("FOLLY_VERSION")
 
 for folly_source_path in Path().glob("folly-source-*"):
-    version = folly_source_path.stem.removeprefix("folly-source-")
+    version = folly_source_path.name.removeprefix("folly-source-")
     print(f"Checking {folly_source_path} ({custom_version=}, {version=}, {version == custom_version=})")
     if custom_version is None or version == custom_version:
         assert folly_source_path.is_dir()
