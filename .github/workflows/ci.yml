@@ -44,12 +44,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FOLLY_VERSION: ${{ env.FOLLY_VERSION }}
-        run: poetry run python3 ./download.py -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
+        run: poetry run python3 ./download.py
 
       - name: Build (main build)
         env:
           FOLLY_BUILD_DIR: $FOLLY_BUILD_DIR
-        run: poetry run python setup.py build_ext --inplace
+        run: poetry run python setup.py build_ext --inplace -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
 
       - name: Test (depends on build)
         env:
