@@ -9,8 +9,9 @@ Some [big work have been done by certain users](https://github.com/facebook/foll
 
 The goal of this repository is to maintain an easy-to-install folly python package based on the main one.
 #### How it works:
-- We download the latest official release of folly;
-- We build it;
+- ~~We download the latest official release of folly;~~
+- ~~We build it;~~
+- We install the latest version of folly;
 - We copy python files from the folly library and arrange them correctly locally;
 - We build/install with a custom `setup.py`;
 - Optional: We run tests thanks to another custom `setup.py`.

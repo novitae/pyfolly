@@ -3,11 +3,31 @@ from setuptools import Extension, setup
 import os
 from pathlib import Path
 import sys
+import platform
 
 folly_python_path = Path().absolute().parent.parent
 assert (folly_python_path / "__init__.pxd").exists(), "Normal `setup.py` must be ran prior."
 
-include_dirs = [".", "../../.."]
+if (FOLLY_PY_LPATH := os.getenv("FOLLY_PY_LPATH")) and (FOLLY_PY_IPATH := os.getenv("FOLLY_PY_IPATH")):
+    library_dirs = FOLLY_PY_LPATH.split(":")
+    include_dirs = FOLLY_PY_IPATH.split(":")
+elif sys.platform == 'darwin':  # macOS
+    if platform.machine() == 'arm64':  # Apple Silicon
+        library_dirs = ['/opt/homebrew/lib']
+        include_dirs = ['/opt/homebrew/include']
+    else:  # Intel macOS
+        library_dirs = ['/usr/lib']
+        include_dirs = ['/usr/include']
+# elif sys.platform == 'win32':  # Windows
+#     library_dirs = ['C:\\Program Files\\Library\\lib']
+#     include_dirs = ['C:\\Program Files\\Library\\include']
+# elif sys.platform.startswith('linux'):  # Linux
+#     library_dirs = ['/usr/lib', '/usr/local/lib']
+#     include_dirs = ['/usr/include', '/usr/local/include']
+else:  # Other platforms
+    raise ValueError(f'Unknown {sys.platform=}')
+
+include_dirs.extend([".", "../../.."])
 compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
 
 def link(source: Path, dest: Path):
@@ -33,6 +53,7 @@ exts = [
         extra_compile_args=compile_args,
         include_dirs=include_dirs,
         libraries=["folly", "glog"],
+        library_dirs=library_dirs,
     ),
     Extension(
         'test_set_executor_cython',
@@ -41,6 +62,7 @@ exts = [
         extra_compile_args=compile_args,
         include_dirs=include_dirs,
         libraries=["folly", "glog"],
+        library_dirs=library_dirs,
     ),
 ]
 
