@@ -80,23 +80,7 @@ if _folly_build_dir := os.getenv("FOLLY_BUILD_DIR"):
 else:
     raise ValueError('FOLLY_BUILD_DIR is not defined')
 
-include_dirs = []
-library_dirs = []
-
-folly_installed_dir = folly_build_dir / "installed"
-assert folly_installed_dir.exists()
-for installed_lib in folly_installed_dir.iterdir():
-    if installed_lib.is_dir() is False:
-        continue
-    installed_lib_include = installed_lib / "include"
-    assert installed_lib_include.exists()
-    include_dirs.append(str(installed_lib_include.absolute()))
-    installed_lib_library = installed_lib / "lib"
-    assert installed_lib_library.exists()
-    include_dirs.append(str(installed_lib_library.absolute()))
-
-include_dirs.append(".")
-
+include_dirs = ["."]
 compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
 
 exts = [
@@ -106,7 +90,6 @@ exts = [
         libraries=["folly", "glog"],
         extra_compile_args=compile_args,
         include_dirs=include_dirs,
-        library_dirs=library_dirs,
     ),
     Extension(
         "folly.iobuf",
@@ -114,7 +97,6 @@ exts = [
         libraries=["folly", "glog"],
         extra_compile_args=compile_args,
         include_dirs=include_dirs,
-        library_dirs=library_dirs,
     )
 ]
 
