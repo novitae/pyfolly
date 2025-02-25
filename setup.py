@@ -86,8 +86,9 @@ if sys.platform == 'darwin':  # macOS
     # To avoid any deployment issues where python3.11 and lower uses as minimum
     # macos version 10.9, and then the build fails. It seems to work fine from
     # 10.13 (as python3.12 and upper uses).
-    if "MACOSX_DEPLOYMENT_TARGET" not in os.environ:
-        os.environ["MACOSX_DEPLOYMENT_TARGET"] = "10.13"
+    # if "MACOSX_DEPLOYMENT_TARGET" not in os.environ:
+    #     os.environ["MACOSX_DEPLOYMENT_TARGET"] = "10.13"
+    compile_args.append("-mmacosx-version-min=12")
 
     if platform.machine() == 'arm64':  # Apple Silicon
         library_dirs += ['/opt/homebrew/lib']
