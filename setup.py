@@ -4,6 +4,7 @@ import platform
 from pathlib import Path
 from Cython.Build import cythonize
 from setuptools import Extension, setup
+import sysconfig
 
 def copy_file_to(source: Path, destination: Path):
     if destination.parent.exists() is False:
@@ -77,9 +78,17 @@ for source, destination in [
 (folly_python_path / "iobuf_ext.h").symlink_to(folly_python_path / "python" / "iobuf_ext.h")
 (folly_python_path / "iobuf_ext.cpp").symlink_to(folly_python_path / "python" / "iobuf_ext.cpp")
 
+compile_args = ['-std=c++20']
+
 library_dirs = lp.split(":") if (lp := os.getenv("FOLLY_PY_LPATH")) else []
 include_dirs = ip.split(":") if (ip := os.getenv("FOLLY_PY_IPATH")) else []
 if sys.platform == 'darwin':  # macOS
+    # To avoid any deployment issues where python3.11 and lower uses as minimum
+    # macos version 10.9, and then the build fails. It seems to work fine from
+    # 10.13 (as python3.12 and upper uses).
+    if "MACOSX_DEPLOYMENT_TARGET" not in os.environ:
+        os.environ["MACOSX_DEPLOYMENT_TARGET"] = "10.13"
+
     if platform.machine() == 'arm64':  # Apple Silicon
         library_dirs += ['/opt/homebrew/lib']
         include_dirs += ['/opt/homebrew/include']
@@ -97,7 +106,6 @@ else:  # Other platforms
         raise ValueError(f'Unknown {sys.platform=}, please manually specify FOLLY_PY_LPATH and FOLLY_PY_IPATH')
 
 include_dirs += ["."]
-compile_args = ['-std=c++20']
 if sys.version_info >= (3, 13):
     compile_args.append('-D_Py_IsFinalizing=Py_IsFinalizing')
 
