@@ -62,9 +62,10 @@ jobs:
 
   run-tests-linux:
     runs-on: ${{ matrix.os }}
-    matrix:
-      os: [ubuntu-latest]
-      python-version: ['3.9', '3.12', '3.13']
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.9', '3.12', '3.13']
 
     steps:
       - name: Check out repository
