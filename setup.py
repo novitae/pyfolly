@@ -4,7 +4,6 @@ import platform
 from pathlib import Path
 from Cython.Build import cythonize
 from setuptools import Extension, setup
-import sysconfig
 
 def copy_file_to(source: Path, destination: Path):
     if destination.parent.exists() is False:
