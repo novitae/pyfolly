@@ -101,8 +101,10 @@ jobs:
               cd "$dir" || exit 1
               break
           done
-          poetry run python ./build/fbcode_builder/getdeps.py install-system-deps --recursive
-          poetry run python ./build/fbcode_builder/getdeps.py --allow-system-packages build
+          poetry run python ./build/fbcode_builder/getdeps.py install-system-deps folly --recursive
+          echo "Installed folly dependencies"
+          poetry run python ./build/fbcode_builder/getdeps.py build --allow-system-packages
+          echo "Built folly succesfully"
           echo "FOLLY_INSTALL_DIR=$(poetry run python ./build/fbcode_builder/getdeps.py show-inst-dir)" >> $GITHUB_ENV
 
       - name: Locating built Folly's Include and Lib
