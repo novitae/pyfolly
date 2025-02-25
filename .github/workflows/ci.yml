@@ -6,61 +6,6 @@ on:
   pull_request:
 
 jobs:
-  # run-tests-macos:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os: [macos-latest]
-  #       python-version: ['3.9', '3.12', '3.13']
-
-  #   steps:
-  #     - name: Check out repository
-  #       uses: actions/checkout@v3
-
-  #     - name: Install deps
-  #       if: matrix.os == 'macos-latest'
-  #       run: brew install jq
-      
-  #     - name: Installing folly (via Homebrew)
-  #       run: |
-  #         brew install folly
-  #         echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
-  #         # echo "INCLUDE_DIR=$(brew --prefix)/include" >> $GITHUB_ENV
-  #         # echo "LIBRARY_DIR=$(brew --prefix)/lib" >> $GITHUB_ENV
-
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
-
-  #     - name: Install Poetry
-  #       uses: snok/install-poetry@v1
-  #       with:
-  #         poetry-version: 'latest'
-
-  #     - name: Install dependencies
-  #       run: poetry install --all-groups
-
-  #     - name: Downloading Folly files
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         FOLLY_VERSION: ${{ env.FOLLY_VERSION }}
-  #       run: poetry run python3 ./download.py
-
-  #     - name: Build
-  #       run: |
-  #         poetry run python setup.py build_ext --inplace
-  #         # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
-
-  #     - name: Build tests
-  #       run: |
-  #         cd folly/python/test
-  #         poetry run python setup.py build_ext --inplace
-  #         # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
-
-  #     - name: Run tests
-  #       run: poetry run python -m pytest
-
   run-tests-linux:
     runs-on: ${{ matrix.os }}
     matrix:
