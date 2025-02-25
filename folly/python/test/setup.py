@@ -28,7 +28,9 @@ else:  # Other platforms
     raise ValueError(f'Unknown {sys.platform=}')
 
 include_dirs.extend([".", "../../.."])
-compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
+compile_args = ['-std=c++20']
+if sys.version_info >= (3, 13): 
+    compile_args.append('-D_Py_IsFinalizing=Py_IsFinalizing')
 
 def link(source: Path, dest: Path):
     assert source.exists() and source.is_file(), f"Missing {source}"

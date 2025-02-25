@@ -97,7 +97,7 @@ else:  # Other platforms
         raise ValueError(f'Unknown {sys.platform=}, please manually specify FOLLY_PY_LPATH and FOLLY_PY_IPATH')
 
 include_dirs += ["."]
-compile_args = ['-std=gnu++20']
+compile_args = ['-std=c++20']
 if sys.version_info >= (3, 13):
     compile_args.append('-D_Py_IsFinalizing=Py_IsFinalizing')
 
