@@ -8,16 +8,18 @@ import platform
 folly_python_path = Path().absolute().parent.parent
 assert (folly_python_path / "__init__.pxd").exists(), "Normal `setup.py` must be ran prior."
 
-if (FOLLY_PY_LPATH := os.getenv("FOLLY_PY_LPATH")) and (FOLLY_PY_IPATH := os.getenv("FOLLY_PY_IPATH")):
-    library_dirs = FOLLY_PY_LPATH.split(":")
-    include_dirs = FOLLY_PY_IPATH.split(":")
-elif sys.platform == 'darwin':  # macOS
+compile_args = ['-std=c++20']
+
+library_dirs = lp.split(":") if (lp := os.getenv("FOLLY_PY_LPATH")) else []
+include_dirs = ip.split(":") if (ip := os.getenv("FOLLY_PY_IPATH")) else []
+if sys.platform == 'darwin':  # macOS
+    compile_args.append("-mmacosx-version-min=10.13")
     if platform.machine() == 'arm64':  # Apple Silicon
-        library_dirs = ['/opt/homebrew/lib']
-        include_dirs = ['/opt/homebrew/include']
+        library_dirs += ['/opt/homebrew/lib']
+        include_dirs += ['/opt/homebrew/include']
     else:  # Intel macOS
-        library_dirs = ['/usr/lib']
-        include_dirs = ['/usr/include']
+        library_dirs += ['/usr/lib']
+        include_dirs += ['/usr/include']
 # elif sys.platform == 'win32':  # Windows
 #     library_dirs = ['C:\\Program Files\\Library\\lib']
 #     include_dirs = ['C:\\Program Files\\Library\\include']
@@ -28,7 +30,6 @@ else:  # Other platforms
     raise ValueError(f'Unknown {sys.platform=}')
 
 include_dirs.extend([".", "../../.."])
-compile_args = ['-std=c++20']
 if sys.version_info >= (3, 13): 
     compile_args.append('-D_Py_IsFinalizing=Py_IsFinalizing')
 
