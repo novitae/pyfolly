@@ -26,7 +26,7 @@ custom_version = os.getenv("FOLLY_VERSION")
 
 for folly_source_path in Path().glob("folly-source-*"):
     version = folly_source_path.name.removeprefix("folly-source-")
-    print(f"Checking {folly_source_path} ({custom_version=}, {version=}, {version == custom_version=})")
+    print(f"Checking {folly_source_path} ({custom_version=}, {version=})")
     if custom_version is None or version == custom_version:
         assert folly_source_path.is_dir()
         break
@@ -77,27 +77,29 @@ for source, destination in [
 (folly_python_path / "iobuf_ext.h").symlink_to(folly_python_path / "python" / "iobuf_ext.h")
 (folly_python_path / "iobuf_ext.cpp").symlink_to(folly_python_path / "python" / "iobuf_ext.cpp")
 
-if (FOLLY_PY_LPATH := os.getenv("FOLLY_PY_LPATH")) and (FOLLY_PY_IPATH := os.getenv("FOLLY_PY_IPATH")):
-    library_dirs = FOLLY_PY_LPATH.split(":")
-    include_dirs = FOLLY_PY_IPATH.split(":")
-elif sys.platform == 'darwin':  # macOS
+library_dirs = lp.split(":") if (lp := os.getenv("FOLLY_PY_LPATH")) else []
+include_dirs = ip.split(":") if (ip := os.getenv("FOLLY_PY_IPATH")) else []
+if sys.platform == 'darwin':  # macOS
     if platform.machine() == 'arm64':  # Apple Silicon
-        library_dirs = ['/opt/homebrew/lib']
-        include_dirs = ['/opt/homebrew/include']
+        library_dirs += ['/opt/homebrew/lib']
+        include_dirs += ['/opt/homebrew/include']
     else:  # Intel macOS
-        library_dirs = ['/usr/lib']
-        include_dirs = ['/usr/include']
+        library_dirs += ['/usr/lib']
+        include_dirs += ['/usr/include']
 # elif sys.platform == 'win32':  # Windows
-#     library_dirs = ['C:\\Program Files\\Library\\lib']
-#     include_dirs = ['C:\\Program Files\\Library\\include']
+#     library_dirs += ['C:\\Program Files\\Library\\lib']
+#     include_dirs += ['C:\\Program Files\\Library\\include']
 # elif sys.platform.startswith('linux'):  # Linux
-#     library_dirs = ['/usr/lib', '/usr/local/lib']
-#     include_dirs = ['/usr/include', '/usr/local/include']
+#     library_dirs += ['/usr/lib', '/usr/local/lib']
+#     include_dirs += ['/usr/include', '/usr/local/include']
 else:  # Other platforms
-    raise ValueError(f'Unknown {sys.platform=}')
+    if not (library_dirs and include_dirs):
+        raise ValueError(f'Unknown {sys.platform=}, please manually specify FOLLY_PY_LPATH and FOLLY_PY_IPATH')
 
-include_dirs.extend(["."])
-compile_args = ['-std=gnu++20', *([] if sys.version_info < (3, 13) else ['-D_Py_IsFinalizing=Py_IsFinalizing'])]
+include_dirs += ["."]
+compile_args = ['-std=gnu++20']
+if sys.version_info < (3, 13):
+    compile_args.append('-D_Py_IsFinalizing=Py_IsFinalizing')
 
 exts = [
     Extension(
@@ -121,9 +123,7 @@ exts = [
 setup(
     name="folly",
     version=version,
-    description="",
-    author="ae",
-    author_email="85891169+novitae@users.noreply.github.com",
+    description="Facebook folly's python package installed with https://github.com/novitae/folly",
     packages=["folly"],
     package_data={"": ["*.pxd", "*.h"]},
     setup_requires=["cython"],

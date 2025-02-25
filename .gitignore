@@ -8,6 +8,7 @@ folly-source-*
 build
 !insertions/build
 __pycache__
+.pytest_cache
 
 folly/**/*.h
 folly/**/*.cpp
