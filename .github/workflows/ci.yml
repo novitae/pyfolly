@@ -5,71 +5,27 @@ on:
   pull_request:
 
 jobs:
-  # run-tests-macos:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os: [macos-latest]
-  #       python-version: ['3.9', '3.12', '3.13']
-
-  #   steps:
-  #     - name: Check out repository
-  #       uses: actions/checkout@v3
-
-  #     - name: Install deps
-  #       if: matrix.os == 'macos-latest'
-  #       run: brew install jq
-      
-  #     - name: Installing folly (via Homebrew)
-  #       run: |
-  #         brew install folly
-  #         echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
-  #         # echo "INCLUDE_DIR=$(brew --prefix)/include" >> $GITHUB_ENV
-  #         # echo "LIBRARY_DIR=$(brew --prefix)/lib" >> $GITHUB_ENV
-
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
-
-  #     - name: Install Poetry
-  #       uses: snok/install-poetry@v1
-  #       with:
-  #         poetry-version: 'latest'
-
-  #     - name: Install dependencies
-  #       run: poetry install --all-groups
-
-  #     - name: Downloading Folly files
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         FOLLY_VERSION: ${{ env.FOLLY_VERSION }}
-  #       run: poetry run python3 ./download.py
-
-  #     - name: Build
-  #       run: |
-  #         poetry run python setup.py build_ext --inplace
-  #         # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
-
-  #     - name: Build tests
-  #       run: |
-  #         cd folly/python/test
-  #         poetry run python setup.py build_ext --inplace
-  #         # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
-
-  #     - name: Run tests
-  #       run: poetry run python -m pytest
-
-  run-tests-linux:
+  run-tests-macos:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest]
         python-version: ['3.9', '3.12', '3.13']
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+
+      - name: Install deps
+        if: matrix.os == 'macos-latest'
+        run: brew install jq
+      
+      - name: Installing folly (via Homebrew)
+        run: |
+          brew install folly
+          echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
+          # echo "INCLUDE_DIR=$(brew --prefix)/include" >> $GITHUB_ENV
+          # echo "LIBRARY_DIR=$(brew --prefix)/lib" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -87,51 +43,109 @@ jobs:
       - name: Downloading Folly files
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FOLLY_VERSION: ${{ env.FOLLY_VERSION }}
         run: poetry run python3 ./download.py
-
-      - name: Building Folly
-        run: |
-          dirs=$(find . -maxdepth 1 -type d -name 'folly-source-*')
-          if [ -z "$dirs" ]; then
-              echo "Couldn't find any folly source directory."
-              exit 1
-          fi
-          for dir in $dirs; do
-              echo "Found folly source dir: $dir"
-              cd "$dir" || exit 1
-              break
-          done
-          poetry run python ./build/fbcode_builder/getdeps.py install-system-deps folly --recursive
-          echo "Installed folly dependencies"
-          poetry run python ./build/fbcode_builder/getdeps.py build folly --allow-system-packages
-          echo "Built folly succesfully"
-          echo "FOLLY_INSTALL_DIR=$(poetry run python ./build/fbcode_builder/getdeps.py show-inst-dir)" >> $GITHUB_ENV
-
-      - name: Locating built Folly's Include and Lib
-        run: |
-          BUILT_FOLLY_INCLUDE="${{ env.FOLLY_INSTALL_DIR }}/installed/folly/include"
-          if [ ! -d $BUILT_FOLLY_INCLUDE ]; then
-            echo "BUILT_FOLLY_INCLUDE=$BUILT_FOLLY_INCLUDE doesn't exist !"
-            exit 1
-          else
-            echo "BUILT_FOLLY_INCLUDE=$BUILT_FOLLY_INCLUDE" >> $GITHUB_ENV
-          fi
-
-          BUILT_FOLLY_LIB="${{ env.FOLLY_INSTALL_DIR }}/installed/folly/lib"
-          if [ ! -d $BUILT_FOLLY_LIB ]; then
-            echo "BUILT_FOLLY_LIB=$BUILT_FOLLY_LIB doesn't exist !"
-          else
-            echo "BUILT_FOLLY_LIB=$BUILT_FOLLY_LIB" >> $GITHUB_ENV
-          fi
 
       - name: Build
         run: |
-          poetry run python setup.py build_ext --inplace -I${{ env.BUILT_FOLLY_LIB }} -L${{ env.BUILT_FOLLY_LIB }}
+          poetry run python setup.py build_ext --inplace
+          # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
 
       - name: Build tests
         run: |
           cd folly/python/test
-          poetry run python setup.py build_ext --inplace -I${{ env.BUILT_FOLLY_LIB }} -L${{ env.BUILT_FOLLY_LIB }}
+          poetry run python setup.py build_ext --inplace
+          # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
 
       - name: Run tests
         run: poetry run python -m pytest
+
+  # run-tests-linux:
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest]
+  #       python-version: ['3.9', '3.12', '3.13']
+
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+
+  #     - name: Install Poetry
+  #       uses: snok/install-poetry@v1
+  #       with:
+  #         poetry-version: 'latest'
+
+  #     - name: Install dependencies
+  #       run: poetry install --all-groups
+
+  #     - name: Downloading Folly files
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: poetry run python3 ./download.py
+
+  #     - name: Downloading brew
+  #       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  #     - name: Installing folly (via Homebrew)
+  #       run: |
+  #         brew install folly
+  #         echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
+  #         # echo "INCLUDE_DIR=$(brew --prefix)/include" >> $GITHUB_ENV
+  #         # echo "LIBRARY_DIR=$(brew --prefix)/lib" >> $GITHUB_ENV
+
+  #     # - name: Finding Folly source directory
+  #     #   run: |
+  #     #     dirs=$(find . -maxdepth 1 -type d -name 'folly-source-*')
+  #     #     if [ -z "$dirs" ]; then
+  #     #         echo "Couldn't find any folly source directory."
+  #     #         exit 1
+  #     #     fi
+  #     #     for dir in $dirs; do
+  #     #         echo "Found folly source dir: $dir"
+  #     #         break
+  #     #     done
+  #     #     echo "FOLLY_SOURCE_DIR=$dir" >> $GITHUB_ENV
+
+  #     # - name: Installing Folly dependencies
+  #     #   run: poetry run python "$FOLLY_SOURCE_DIR/build/fbcode_builder/getdeps.py install-system-deps folly --recursive"
+
+  #     # - name: Building Folly
+  #     #   run: |
+  #     #     poetry run python ./build/fbcode_builder/getdeps.py build folly --allow-system-packages --no-tests
+  #     #     echo "Built folly succesfully"
+  #     #     echo "FOLLY_INSTALL_DIR=$(poetry run python ./build/fbcode_builder/getdeps.py show-inst-dir)" >> $GITHUB_ENV
+
+  #     # - name: Locating built Folly's Include and Lib
+  #     #   run: |
+  #     #     BUILT_FOLLY_INCLUDE="${{ env.FOLLY_INSTALL_DIR }}/installed/folly/include"
+  #     #     if [ ! -d $BUILT_FOLLY_INCLUDE ]; then
+  #     #       echo "BUILT_FOLLY_INCLUDE=$BUILT_FOLLY_INCLUDE doesn't exist !"
+  #     #       exit 1
+  #     #     else
+  #     #       echo "BUILT_FOLLY_INCLUDE=$BUILT_FOLLY_INCLUDE" >> $GITHUB_ENV
+  #     #     fi
+
+  #     #     BUILT_FOLLY_LIB="${{ env.FOLLY_INSTALL_DIR }}/installed/folly/lib"
+  #     #     if [ ! -d $BUILT_FOLLY_LIB ]; then
+  #     #       echo "BUILT_FOLLY_LIB=$BUILT_FOLLY_LIB doesn't exist !"
+  #     #     else
+  #     #       echo "BUILT_FOLLY_LIB=$BUILT_FOLLY_LIB" >> $GITHUB_ENV
+  #     #     fi
+
+  #     - name: Build
+  #       run: |
+  #         poetry run python setup.py build_ext --inplace -I${{ env.BUILT_FOLLY_LIB }} -L${{ env.BUILT_FOLLY_LIB }}
+
+  #     - name: Build tests
+  #       run: |
+  #         cd folly/python/test
+  #         poetry run python setup.py build_ext --inplace -I${{ env.BUILT_FOLLY_LIB }} -L${{ env.BUILT_FOLLY_LIB }}
+
+  #     - name: Run tests
+  #       run: poetry run python -m pytest
