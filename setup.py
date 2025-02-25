@@ -88,13 +88,7 @@ if sys.platform == 'darwin':  # macOS
     # 10.13 (as python3.12 and upper uses).
     # if "MACOSX_DEPLOYMENT_TARGET" not in os.environ:
     #     os.environ["MACOSX_DEPLOYMENT_TARGET"] = "10.13"
-    # compile_args.append("-mmacosx-version-min=12")
-
-    cfg_vars = sysconfig.get_config_vars()
-    for key in ('CFLAGS', 'CCSHARED', 'LDSHARED', 'LDCXXSHARED', 'PY_LDFLAGS', 'PY_CFLAGS', 'PY_CPPFLAGS'):
-        if key in cfg_vars:
-            print(f"Found {key=} in cfg_vars, {cfg_vars[key]=}")
-            cfg_vars[key] = cfg_vars[key].replace('-mmacosx-version-min=10.9', '-mmacosx-version-min=12')
+    compile_args.append("-mmacosx-version-min=12")
 
     if platform.machine() == 'arm64':  # Apple Silicon
         library_dirs += ['/opt/homebrew/lib']
