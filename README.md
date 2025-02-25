@@ -16,7 +16,7 @@ The goal of this repository is to maintain an easy-to-install folly python packa
 - We build/install with a custom `setup.py`;
 - Optional: We run tests thanks to another custom `setup.py`.
 
-This repository doesn't contain any code from folly, but rather a way to organise and build it. The only code being replaced can be found in the [`replacements` dir](./replacements/).
+This repository doesn't contain any code from folly, but rather a way to organise and build it. The only code being overwritten can be found in the [`insertions` dir](./insertions/).
 #### Additional features to normal folly
 - Supports python 3.13:
   - By adding the macro `-D_Py_Is_Finalizing=Py_Is_Finalizing` when compiling.

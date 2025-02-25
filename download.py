@@ -44,12 +44,12 @@ def main():
     compressed_folly_source_path.unlink()
     print(f"Decompressed as {folly_source_path}")
 
-    for source_path in Path("./replacements").glob("**/*"):
+    for source_path in Path("insertions").glob("**/*"):
         if source_path.name == "README.md" or source_path.is_dir():
             continue
         with open(source_path, "rb") as read:
             content = read.read()
-        destination = Path(folly_source_path, source_path.relative_to("./replacements")).absolute()
+        destination = Path(folly_source_path, source_path.relative_to("insertions")).absolute()
         with open(destination, "wb") as write:
             write.write(content)
         print(f"Replaced {destination} by {source_path}")

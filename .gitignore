@@ -6,7 +6,7 @@ dist
 folly-source-*
 *.so
 build
-!replacements/build
+!insertions/build
 __pycache__
 
 folly/**/*.h
