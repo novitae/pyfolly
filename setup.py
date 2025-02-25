@@ -98,7 +98,7 @@ else:  # Other platforms
 
 include_dirs += ["."]
 compile_args = ['-std=gnu++20']
-if sys.version_info < (3, 13):
+if sys.version_info >= (3, 13):
     compile_args.append('-D_Py_IsFinalizing=Py_IsFinalizing')
 
 exts = [
