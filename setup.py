@@ -42,7 +42,7 @@ folly_py_src_path = folly_source_path / "folly/python"
 
 remove_recursive(
     path=folly_python_path,
-    exclude_names=["README.md", "setup.py", "__init__.py"],
+    exclude_names=["README.md", "setup.py"],
 )
 
 for source, destination in [

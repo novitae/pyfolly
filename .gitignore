@@ -9,6 +9,7 @@ build
 !insertions/build
 __pycache__
 .pytest_cache
+.version
 
 folly/**/*.h
 folly/**/*.cpp
