@@ -46,6 +46,8 @@ remove_recursive(
 )
 
 for source, destination in [
+    ((folly_py_src_path / "__init__.py"), (folly_python_path / "__init__.py")),
+    ((folly_py_src_path / "test/__init__.py"), (folly_python_path / "python/test/__init__.py")),
     ((folly_py_src_path / "__init__.pxd"), (folly_python_path / "__init__.pxd")),
     ((folly_py_src_path / "error.cpp"), (folly_python_path / "python" / "error.cpp")),
 
