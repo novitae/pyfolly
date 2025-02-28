@@ -26,6 +26,8 @@ This repository doesn't contain any code from folly, but rather a way to organis
 brew install folly
 pip install git+https://github.com/novitae/folly.git
 ```
+#### Linux
+Same as MacOS. You will have to install brew. Make sure that `/home/linuxbrew/.linuxbrew/lib` is in your `LD_LIBRARY_PATH` before running.
 #### Else / Manually
 You can set the custom include and lib path to folly the following way:
 ```sh

@@ -5,6 +5,11 @@ on:
     branches:
       - main
       - run_action
+    paths:
+      - 'setup.py'
+      - 'folly/python/test/setup.py'
+      - 'pyproject.toml'
+      - '.github/workflows/**'
 
 jobs:
   run-tests-macos:
