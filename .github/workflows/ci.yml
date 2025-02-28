@@ -83,11 +83,6 @@ jobs:
       - name: Install dependencies
         run: poetry install --all-groups
 
-      - name: Downloading Folly files
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: poetry run python3 ./download.py
-
       - name: Downloading brew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
@@ -97,6 +92,9 @@ jobs:
           echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
 
       - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSTM_FOLLY_VERS: ${{ env.FOLLY_VERSION }}
         run: |
           poetry run python setup.py build_ext --inplace
 
