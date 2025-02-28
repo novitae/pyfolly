@@ -78,7 +78,7 @@ jobs:
         run: |
           /home/linuxbrew/.linuxbrew/bin/brew install folly
           echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
-          
+
       - name: Check out repository
         uses: actions/checkout@v3
 
@@ -108,4 +108,5 @@ jobs:
           poetry run python setup.py build_ext --inplace
 
       - name: Run tests
-        run: poetry run python -m pytest
+        run: |
+          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:folly/python/test" poetry run python -m pytest
