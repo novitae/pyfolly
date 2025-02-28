@@ -42,13 +42,10 @@ jobs:
       - name: Install dependencies
         run: poetry install --all-groups
 
-      - name: Downloading Folly files
+      - name: Build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FOLLY_VERSION: ${{ env.FOLLY_VERSION }}
-        run: poetry run python3 ./download.py
-
-      - name: Build
+          CSTM_FOLLY_VERS: ${{ env.FOLLY_VERSION }}
         run: |
           poetry run python setup.py build_ext --inplace
           # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
