@@ -23,9 +23,9 @@ if sys.platform == 'darwin':  # macOS
 # elif sys.platform == 'win32':  # Windows
 #     library_dirs = ['C:\\Program Files\\Library\\lib']
 #     include_dirs = ['C:\\Program Files\\Library\\include']
-# elif sys.platform.startswith('linux'):  # Linux
-#     library_dirs = ['/usr/lib', '/usr/local/lib']
-#     include_dirs = ['/usr/include', '/usr/local/include']
+elif sys.platform.startswith('linux'):  # Linux
+    library_dirs = ["/home/linuxbrew/.linuxbrew/lib"]
+    include_dirs = ["/home/linuxbrew/.linuxbrew/include"]
 else:  # Other platforms
     raise ValueError(f'Unknown {sys.platform=}')
 
