@@ -70,7 +70,7 @@ def get_platform_paths():
         else:  # Intel macOS
             return (["/usr/lib"], ["/usr/include"])
     elif sys.platform.startswith('linux'):
-        return (["/home/linuxbrew/.linuxbrew/lib", "/home/linuxbrew/.linuxbrew/include"])
+        return (["/home/linuxbrew/.linuxbrew/lib"], ["/home/linuxbrew/.linuxbrew/include"])
     else:
         raise ValueError(f'Unknown {sys.platform=}')
         # For Linux/Windows, adapt as needed
