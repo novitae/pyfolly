@@ -67,6 +67,18 @@ jobs:
         python-version: ['3.12']
 
     steps:
+      - name: Installing Homebrew
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          # echo >> /home/runner/.bashrc
+          # echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/runner/.bashrc
+          # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+      - name: Installing folly (via Homebrew)
+        run: |
+          /home/linuxbrew/.linuxbrew/bin/brew install folly
+          echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
+          
       - name: Check out repository
         uses: actions/checkout@v3
 
@@ -82,18 +94,6 @@ jobs:
 
       - name: Install dependencies
         run: poetry install --all-groups
-
-      - name: Installing Homebrew
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          echo >> /home/runner/.bashrc
-          echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/runner/.bashrc
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-      - name: Installing folly (via Homebrew)
-        run: |
-          brew install folly
-          echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
 
       - name: Build
         env:
