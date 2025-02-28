@@ -106,7 +106,7 @@ jobs:
         run: |
           cd folly/python/test
           poetry run python setup.py build_ext --inplace
+          echo $(ls)
 
       - name: Run tests
-        run: |
-          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:folly/python/test" poetry run python -m pytest
+        run: poetry run python -m pytest
