@@ -64,7 +64,11 @@ def get_platform_paths():
     Adjust as you see fit for Linux/Windows, etc.
     """
     if sys.platform == "darwin":  # macOS
-        COMPILE_ARGS.append("-mmacosx-version-min=10.13")
+        for item in COMPILE_ARGS:
+            if item.startswith("-mmacosx-version-min="):
+                break
+        else:
+            COMPILE_ARGS.append("-mmacosx-version-min=10.13")
         if platform.machine() == "arm64":  # Apple Silicon
             return (["/opt/homebrew/lib"], ["/opt/homebrew/include"])
         else:  # Intel macOS

@@ -29,20 +29,16 @@ pip install git+https://github.com/novitae/folly.git
 #### Linux
 Same as MacOS. You will have to install brew. Make sure that `/home/linuxbrew/.linuxbrew/lib` is in your `LD_LIBRARY_PATH` before running.
 #### Else / Manually
-You can set the custom include and lib path to folly the following way:
-```sh
-FOLLY_PY_IPATH=... # For include
-FOLLY_PY_LPATH=... # For lib
-```
-On MacOS, you could install this way:
-```sh
-FOLLY_PY_IPATH="$(brew --prefix)/include" FOLLY_PY_LPATH="$(brew --prefix)/lib" pip install .
-```
-You can set many by separating them by `:`:
-```sh
-FOLLY_PY_IPATH="/opt/homebrew/lib:/usr/lib"
-# For `/opt/homebrew/lib` and `/usr/lib`
-```
+You can set many env variables to custom the install. This is only for the main setup, not the test setup (for now).
+| Name | Explanation | Example |
+| :-: | :- | :- |
+| `FOLLY_PY_COMPARGS` | A string that must contain arguments that will be placed into the `extra_compile_args` of every Extensions. | `FOLLY_PY_COMPARGS="-mmacosx-version-min=12" pip install .` |
+| `FOLLY_PY_LPATH` | A list of lib paths, separated by `:`, to use in the `library_dirs` of every Extensions. | `FOLLY_PY_LPATH=/tmp/folly/installed/folly/lib pip install .` |
+| `FOLLY_PY_IPATH` | A list of include paths, separated by `:`, to use in the `include_dirs` of every Extensions. | `FOLLY_PY_LPATH=/tmp/folly/installed/folly/include pip install .` |
+| `FOLLY_PY_IGNORE_AUTO_PATH` | Will skip adding the automatically detected include and library paths (based on the system) if set to `true`. Useful to install a folly built with its dependencies aside from brew or whatever package manager the script would detect automatically. | `FOLLY_PY_IGNORE_AUTO_PATH=true pip install .` |
+| `FOLLY_PY_REL_VERS` | Custom folly version name. Must be taken from [the official releases page](https://github.com/facebook/folly/releases). *Note: You cannot downgrade folly on brew (idk for vcpkg). If you want to use a previous version, you might need to build it yourself and then use the `FOLLY_PY_LPATH`-`FOLLY_PY_IPATH`-`FOLLY_PY_IGNORE_AUTO_PATH` args. But folly shouldn't change much in between releases, and must stay backward compatible.* | `FOLLY_PY_REL_VERS="v2024.07.22.00" pip install .` |
+
+---
 
 > Build:
 > ```
