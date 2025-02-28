@@ -19,17 +19,19 @@ CURRENT_DIRECTORY = Path(__file__).parent.resolve()
 INSERTIONS_DIRECTORY = CURRENT_DIRECTORY / "insertions"
 FOLLY_PYTHON_PATH = CURRENT_DIRECTORY / "folly"
 
-DEFAULT_COMPILE_ARGS = ["-std=c++20"]
+COMPILE_ARGS = ["-std=c++20"]
+if compargs := os.getenv("FOLLY_PY_COMPARGS"):
+    COMPILE_ARGS.append(compargs)
 if sys.version_info >= (3, 13):
-    DEFAULT_COMPILE_ARGS.append("-D_Py_IsFinalizing=Py_IsFinalizing")
+    COMPILE_ARGS.append("-D_Py_IsFinalizing=Py_IsFinalizing")
 
 # We keep these as lists so they never become None
 LIBRARY_DIRS = _.split(":") if (_ := os.getenv("FOLLY_PY_LPATH")) else []
 INCLUDE_DIRS = _.split(":") if (_ := os.getenv("FOLLY_PY_IPATH")) else []
 INCLUDE_DIRS.append(".")
-COMPILE_ARGS = DEFAULT_COMPILE_ARGS[:]
 
-CUSTOM_FOLLY_VERS = os.getenv("CSTM_FOLLY_VERS", None)
+IGNORE_AUTO_PATH = os.getenv("FOLLY_PY_IGNORE_AUTO_PATH")
+CUSTOM_FOLLY_VERS = os.getenv("FOLLY_PY_REL_VERS", None)
 
 # ------------------------------------------------------------------------------
 # HELPER FUNCTIONS
@@ -67,7 +69,10 @@ def get_platform_paths():
             return (["/opt/homebrew/lib"], ["/opt/homebrew/include"])
         else:  # Intel macOS
             return (["/usr/lib"], ["/usr/include"])
+    elif sys.platform.startswith('linux'):
+        return (["/home/linuxbrew/.linuxbrew/lib", "/home/linuxbrew/.linuxbrew/include"])
     else:
+        raise ValueError(f'Unknown {sys.platform=}')
         # For Linux/Windows, adapt as needed
         return ([], [])
 
@@ -319,12 +324,17 @@ class CustomBuildExt(build_ext):
         self.folly_py_lpath = None
         self.folly_py_ipath = None
         self.compile_args = None
-        self.ignore_auto_path = False
+        self.ignore_auto_path = None
 
     def finalize_options(self):
         super().finalize_options()
         if not self.folly_version:
             self.folly_version = CUSTOM_FOLLY_VERS
+        if self.ignore_auto_path is None:
+            if IGNORE_AUTO_PATH is None:
+                self.ignore_auto_path = False
+            else:
+                self.ignore_auto_path = IGNORE_AUTO_PATH == "true"
 
     def run(self):
         # 1) Prepare folly sources
@@ -339,7 +349,7 @@ class CustomBuildExt(build_ext):
             COMPILE_ARGS.extend(self.compile_args.split())
 
         # 3) Possibly add default macOS/other platform paths
-        if not self.ignore_auto_path:
+        if self.ignore_auto_path is not True:
             ldirs, idirs = get_platform_paths()
             LIBRARY_DIRS.extend(ldirs)
             INCLUDE_DIRS.extend(idirs)
@@ -376,12 +386,17 @@ class CustomInstall(install):
         self.folly_py_lpath = None
         self.folly_py_ipath = None
         self.compile_args = None
-        self.ignore_auto_path = False
+        self.ignore_auto_path = None
 
     def finalize_options(self):
         super().finalize_options()
         if not self.folly_version:
             self.folly_version = CUSTOM_FOLLY_VERS
+        if self.ignore_auto_path is None:
+            if IGNORE_AUTO_PATH is None:
+                self.ignore_auto_path = False
+            else:
+                self.ignore_auto_path = IGNORE_AUTO_PATH == "true"
 
     def run(self):
         # 1) Ensure folly is prepared
@@ -396,7 +411,7 @@ class CustomInstall(install):
             COMPILE_ARGS.extend(self.compile_args.split())
 
         # 3) Possibly add default platform-based paths
-        if not self.ignore_auto_path:
+        if self.ignore_auto_path is not True:
             ldirs, idirs = get_platform_paths()
             LIBRARY_DIRS.extend(ldirs)
             INCLUDE_DIRS.extend(idirs)

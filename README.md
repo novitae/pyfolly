@@ -9,8 +9,6 @@ Some [big work have been done by certain users](https://github.com/facebook/foll
 
 The goal of this repository is to maintain an easy-to-install folly python package based on the main one.
 #### How it works:
-- ~~We download the latest official release of folly;~~
-- ~~We build it;~~
 - We install the latest version of folly;
 - We copy python files from the folly library and arrange them correctly locally;
 - We build/install with a custom `setup.py`;
@@ -28,7 +26,7 @@ This repository doesn't contain any code from folly, but rather a way to organis
 brew install folly
 pip install git+https://github.com/novitae/folly.git
 ```
-#### Else
+#### Else / Manually
 You can set the custom include and lib path to folly the following way:
 ```sh
 FOLLY_PY_IPATH=... # For include
