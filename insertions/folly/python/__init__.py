@@ -1,5 +1,5 @@
 # This package was generated using the repository
-# https://github.com/novitae/folly to facilitate the installation of
+# https://github.com/novitae/pyfolly to facilitate the installation of
 # Folly as a Python package.
 
 # License and Copyright

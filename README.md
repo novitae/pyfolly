@@ -1,6 +1,9 @@
-# Folly (python)
+# PyFolly (python)
 This is an easy-to-install python package for [facebook's folly library](https://github.com/facebook/folly).
-#### Motivation:
+
+> [!WARNING]
+> When reading through this, make sure to differenciate "folly", which is the facebook's library, and "pyfolly" that is my package here.
+### Motivation:
 Folly contains a python package to interract with the big part of the lib. It has very low maintainance (even tho some activity has been pushed recently), and it is a nightmare to install. Only facebook team [seems to be able to install it](https://github.com/facebook/folly/pull/2361#issuecomment-2598875276), and they aren't giving much details about how they do it.
 
 Moreover, simple things such as [supporting `python3.13` by handling `_Py_IsFinalizing` moved to `Py_IsFinalizing`](https://github.com/facebook/folly/pull/2360) isn't even added. It is supported here, without any modification of the original code.
@@ -21,14 +24,15 @@ This repository doesn't contain any code from folly, but rather a way to organis
   - By updating the `ninja` library dependency.
 ---
 ### Installation
-#### MacOS
+#### Using brew
+##### MacOS
 ```
 brew install folly
-pip install git+https://github.com/novitae/folly.git
+pip install git+https://github.com/novitae/pyfolly.git
 ```
-#### Linux
+##### Linux
 Same as MacOS. You will have to install brew. Make sure that `/home/linuxbrew/.linuxbrew/lib` is in your `LD_LIBRARY_PATH` before running.
-#### Else / Manually
+#### Manually
 You can set many env variables to custom the install. This is only for the main setup, not the test setup (for now).
 | Name | Explanation | Example |
 | :-: | :- | :- |

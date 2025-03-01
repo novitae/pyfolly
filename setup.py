@@ -105,7 +105,7 @@ def place_insertions(folly_source_path: Path):
             write.write(content)
         print(f"[place_insertions] - Inserted {source_path} at {destination}")
 
-def download_folly(version: Optional[str] = None, no_redl: bool = False) -> Path:
+def download_folly(version: Optional[str] = None, redl: bool = False) -> Path:
     """
     Download and extract Folly from GitHub releases. Returns the path
     of the extracted 'folly-source-<version>' directory.
@@ -139,7 +139,7 @@ def download_folly(version: Optional[str] = None, no_redl: bool = False) -> Path
 
     folly_source_path = CURRENT_DIRECTORY / f"folly-source-{fetched_version}"
     if folly_source_path.exists():
-        if no_redl:
+        if not redl:
             print(f"[download_folly] Folly {fetched_version} exists, skipping re-download.")
             return folly_source_path
         else:
@@ -224,7 +224,7 @@ def create_folly_python_dir(folly_source_path: Path):
     version_str = get_version_from_folly_source_path(folly_source_path)
     (FOLLY_PYTHON_PATH / ".version").write_text(version_str, encoding="utf-8")
 
-def ensure_folly_prepared(version: Optional[str], no_redl: bool = False):
+def ensure_folly_prepared(version: Optional[str], redl: bool = False):
     """
     Ensure we have the correct version of Folly locally. If not, download
     it and populate the ./folly directory.
@@ -239,7 +239,7 @@ def ensure_folly_prepared(version: Optional[str], no_redl: bool = False):
         print("[ensure_folly_prepared] Folly python dir already exists, no action needed.")
     else:
         # Download & populate
-        dl_path = download_folly(version=version, no_redl=no_redl)
+        dl_path = download_folly(version=version, redl=redl)
         create_folly_python_dir(dl_path)
 
 # ------------------------------------------------------------------------------
@@ -291,20 +291,20 @@ class PrepareFollyCommand(Command):
     description = "Ensure Folly is downloaded and the local python package is ready."
     user_options = [
         ("folly-version=", None, "Folly release/tag to download (optional)."),
-        ("no-redl", None, "Skip re-download if folder with the same version is found."),
+        ("redl", None, "Re-download if folder with the same version is found."),
     ]
-    boolean_options = ["no-redl"]
+    boolean_options = ["redl"]
 
     def initialize_options(self):
         self.folly_version = None
-        self.no_redl = False
+        self.redl = False
 
     def finalize_options(self):
         if not self.folly_version:
             self.folly_version = CUSTOM_FOLLY_VERS
 
     def run(self):
-        ensure_folly_prepared(self.folly_version, no_redl=self.no_redl)
+        ensure_folly_prepared(self.folly_version, redl=self.redl)
 
 class CustomBuildExt(build_ext):
     """
@@ -313,7 +313,7 @@ class CustomBuildExt(build_ext):
     """
     user_options = build_ext.user_options + [
         ("folly-version=", None, "Optional Folly version tag."),
-        ("no-redl", None, "Skip redownload if folder with same version is found."),
+        ("redl", None, "Re-download if folder with same version is found."),
         ("folly-py-lpath=", None, "Colon-separated library paths to add."),
         ("folly-py-ipath=", None, "Colon-separated include paths to add."),
         ("compile-args=", None, "Optional string of extra compile args."),
@@ -324,7 +324,7 @@ class CustomBuildExt(build_ext):
     def initialize_options(self):
         super().initialize_options()
         self.folly_version = None
-        self.no_redl = False
+        self.redl = False
         self.folly_py_lpath = None
         self.folly_py_ipath = None
         self.compile_args = None
@@ -342,7 +342,7 @@ class CustomBuildExt(build_ext):
 
     def run(self):
         # 1) Prepare folly sources
-        ensure_folly_prepared(self.folly_version, no_redl=self.no_redl)
+        ensure_folly_prepared(self.folly_version, redl=self.redl)
 
         # 2) Collect user-specified library/include paths
         if self.folly_py_lpath:
@@ -375,7 +375,7 @@ class CustomInstall(install):
     """
     user_options = install.user_options + [
         ("folly-version=", None, "Optional Folly version tag."),
-        ("no-redl", None, "Skip redownload if folder with same version is found."),
+        ("redl", None, "Re-download if folder with same version is found."),
         ("folly-py-lpath=", None, "Colon-separated library paths to add."),
         ("folly-py-ipath=", None, "Colon-separated include paths to add."),
         ("compile-args=", None, "Optional string of extra compile args."),
@@ -386,7 +386,7 @@ class CustomInstall(install):
     def initialize_options(self):
         super().initialize_options()
         self.folly_version = None
-        self.no_redl = False
+        self.redl = False
         self.folly_py_lpath = None
         self.folly_py_ipath = None
         self.compile_args = None
@@ -404,7 +404,7 @@ class CustomInstall(install):
 
     def run(self):
         # 1) Ensure folly is prepared
-        ensure_folly_prepared(self.folly_version, no_redl=self.no_redl)
+        ensure_folly_prepared(self.folly_version, redl=self.redl)
 
         # 2) Collect user-specified paths
         if self.folly_py_lpath:
