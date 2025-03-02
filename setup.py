@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 from Cython.Build import cythonize
-from setuptools import Extension, setup, Command
+from setuptools import Extension, setup, Command, find_packages
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install import install
 
@@ -22,8 +22,9 @@ FOLLY_PYTHON_PATH = CURRENT_DIRECTORY / "folly"
 COMPILE_ARGS = ["-std=c++20"]
 if compargs := os.getenv("FOLLY_PY_COMPARGS"):
     COMPILE_ARGS.append(compargs)
+DEFINE_MACROS = []
 if sys.version_info >= (3, 13):
-    COMPILE_ARGS.append("-D_Py_IsFinalizing=Py_IsFinalizing")
+    DEFINE_MACROS.append(("D_Py_IsFinalizing", "Py_IsFinalizing"))
 
 # We keep these as lists so they never become None
 LIBRARY_DIRS = _.split(":") if (_ := os.getenv("FOLLY_PY_LPATH")) else []
@@ -177,6 +178,7 @@ def create_folly_python_dir(folly_source_path: Path):
     # Copy all relevant files
     for src, dst in [
         # The main files:
+        # TODO: Move the __init__.py infos to the build mode
         (folly_py_src / "__init__.py", FOLLY_PYTHON_PATH / "__init__.py"),
         (folly_py_src / "test/__init__.py", FOLLY_PYTHON_PATH / "python/test/__init__.py"),
         (folly_py_src / "__init__.pxd", FOLLY_PYTHON_PATH / "__init__.pxd"),
@@ -208,6 +210,22 @@ def create_folly_python_dir(folly_source_path: Path):
         (folly_py_src / "test/iobuf_helper.pxd", FOLLY_PYTHON_PATH / "python/test/iobuf_helper.pxd"),
         (folly_py_src / "test/iobuf_helper.pyx", FOLLY_PYTHON_PATH / "python/test/iobuf_helper.pyx"),
         (folly_py_src / "test/iobuf.py", FOLLY_PYTHON_PATH / "python/test/iobuf.py"),
+
+        # TODO: Fibers & Fibers tests
+        # TODO: Build mode & add to it the fact it has been built via pyfolly
+        # TODO: Additional tests
+
+        # Cython modules
+        (folly_py_src / "async_generator.pxd", FOLLY_PYTHON_PATH / "async_generator.pxd"),
+        (folly_py_src / "cast.pxd", FOLLY_PYTHON_PATH / "cast.pxd"),
+        (folly_py_src / "coro.pxd", FOLLY_PYTHON_PATH / "coro.pxd"),
+        (folly_py_src / "expected.pxd", FOLLY_PYTHON_PATH / "expected.pxd"),
+        (folly_py_src / "fbstring.pxd", FOLLY_PYTHON_PATH / "fbstring.pxd"),
+        (folly_py_src / "function.pxd", FOLLY_PYTHON_PATH / "function.pxd"),
+        (folly_py_src / "futures.pxd", FOLLY_PYTHON_PATH / "futures.pxd"),
+        (folly_py_src / "memory.pxd", FOLLY_PYTHON_PATH / "memory.pxd"),
+        (folly_py_src / "optional.pxd", FOLLY_PYTHON_PATH / "optional.pxd"),
+        (folly_py_src / "range.pxd", FOLLY_PYTHON_PATH / "range.pxd"),
     ]:
         copy_file_to(src, dst)
         print(f"  Copied {src} -> {dst}")
@@ -266,6 +284,7 @@ def get_folly_extensions() -> list[Extension]:
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
+            define_macros=DEFINE_MACROS,
         ),
         NoStubExtension(
             name="folly.iobuf",
@@ -277,6 +296,7 @@ def get_folly_extensions() -> list[Extension]:
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
+            define_macros=DEFINE_MACROS,
         ),
     ]
     return exts
@@ -458,7 +478,7 @@ setup(
     version="0.0.1",
     description="Facebook Folly’s Python bindings (via a custom packaging approach)",
     packages=["folly"],
-    package_data={"folly": ["*.pxd", "*.h", "*.pyi"]},
+    package_data={"": ["*.pxd", "*.h", "*.pyi"]},
     setup_requires=["cython", "requests"],
     # Here we do NOT define ext_modules up front, so Cython won't be called yet
     ext_modules=[],
@@ -470,4 +490,5 @@ setup(
     },
     python_requires=">=3.9",
     zip_safe=False,
+    include_package_data=True,
 )
