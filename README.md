@@ -44,17 +44,3 @@ You can set many env variables to custom the install. This is only for the main 
 | `FOLLY_PY_IPATH` | A list of include paths, separated by `:`, to use in the `include_dirs` of every Extensions. | `FOLLY_PY_LPATH=/tmp/folly/installed/folly/include pip install .` |
 | `FOLLY_PY_IGNORE_AUTO_PATH` | Will skip adding the automatically detected include and library paths (based on the system) if set to `true`. Useful to install a folly built with its dependencies aside from brew or whatever package manager the script would detect automatically. | `FOLLY_PY_IGNORE_AUTO_PATH=true pip install .` |
 | `FOLLY_PY_REL_VERS` | Custom folly version name. Must be taken from [the official releases page](https://github.com/facebook/folly/releases). *Note: You cannot downgrade folly on brew (idk for vcpkg). If you want to use a previous version, you might need to build it yourself and then use the `FOLLY_PY_LPATH`-`FOLLY_PY_IPATH`-`FOLLY_PY_IGNORE_AUTO_PATH` args. But folly shouldn't change much in between releases, and must stay backward compatible.* | `FOLLY_PY_REL_VERS="v2024.07.22.00" pip install .` |
-
----
-
-> Build:
-> ```
-> py setup.py build_ext --inplace
-> ```
-> Test:
-> ```
-> cd folly/python/test
-> py setup.py build_ext --inplace
-> cd ../../..
-> python -m pytest
-> ```
