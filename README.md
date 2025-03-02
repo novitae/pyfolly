@@ -6,7 +6,8 @@ This is an easy-to-install python package for [facebook's folly library](https:/
 ### Motivation:
 Folly contains a python package to interract with the big part of the lib. It has very low maintainance (even tho some activity has been pushed recently), and it is a nightmare to install. Only facebook team [seems to be able to install it](https://github.com/facebook/folly/pull/2361#issuecomment-2598875276), and they aren't giving much details about how they do it.
 
-Moreover, simple things such as [supporting `python3.13` by handling `_Py_IsFinalizing` moved to `Py_IsFinalizing`](https://github.com/facebook/folly/pull/2360) isn't even added. It is supported here, without any modification of the original code.
+~~Moreover, simple things such as [supporting `python3.13` by handling `_Py_IsFinalizing` moved to `Py_IsFinalizing`](https://github.com/facebook/folly/pull/2360) isn't even added. It is supported here, without any modification of the original code.~~
+It seems it was finally added in [this commit](https://github.com/facebook/folly/commit/9ecb9c22f172a21cc164e751951a35a44673bdd6).
 
 Some [big work have been done by certain users](https://github.com/facebook/folly/issues/1703) to make it work again. However, due to recent commits, those changes aren't working and aren't maintained either anymore.
 
@@ -32,6 +33,8 @@ pip install git+https://github.com/novitae/pyfolly.git
 ```
 ##### Linux
 Same as MacOS. You will have to install brew. Make sure that `/home/linuxbrew/.linuxbrew/lib` is in your `LD_LIBRARY_PATH` before running.
+#### From custom build
+You can use the [scratch_install.sh](./scratch_install.sh) script to install folly from scratch. It will download an build all of its dependencies, build folly, and then use it to build and install pyfolly. You can set the var `FOLLY_SCRATCH_DIR` to specify the output of `folly/build/fbcode_builder/getdeps.py show-scratch-dir`, in the case you would already have built it.
 #### Manually
 You can set many env variables to custom the install. This is only for the main setup, not the test setup (for now).
 | Name | Explanation | Example |
