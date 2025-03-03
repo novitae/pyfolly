@@ -24,7 +24,7 @@ if compargs := os.getenv("FOLLY_PY_COMPARGS"):
     COMPILE_ARGS.append(compargs)
 DEFINE_MACROS = []
 if sys.version_info >= (3, 13):
-    DEFINE_MACROS.append(("D_Py_IsFinalizing", "Py_IsFinalizing"))
+    DEFINE_MACROS.append(("_Py_IsFinalizing", "Py_IsFinalizing"))
 
 # We keep these as lists so they never become None
 LIBRARY_DIRS = _.split(":") if (_ := os.getenv("FOLLY_PY_LPATH")) else []
@@ -211,7 +211,14 @@ def create_folly_python_dir(folly_source_path: Path):
         (folly_py_src / "test/iobuf_helper.pyx", FOLLY_PYTHON_PATH / "python/test/iobuf_helper.pyx"),
         (folly_py_src / "test/iobuf.py", FOLLY_PYTHON_PATH / "python/test/iobuf.py"),
 
-        # TODO: Fibers & Fibers tests
+        # Fibers
+        (folly_py_src / "fiber_manager.pxd", FOLLY_PYTHON_PATH / "fiber_manager.pxd"),
+        (folly_py_src / "fiber_manager.pyx", FOLLY_PYTHON_PATH / "fiber_manager.pyx"),
+        (folly_py_src / "fibers.pxd", FOLLY_PYTHON_PATH / "fibers.pxd"),
+        (folly_py_src / "fibers.h", FOLLY_PYTHON_PATH / "python/fibers.h"),
+        (folly_py_src / "fibers.cpp", FOLLY_PYTHON_PATH / "python/fibers.cpp"),
+
+        # TODO: Fibers tests
         # TODO: Build mode & add to it the fact it has been built via pyfolly
         # TODO: Additional tests
 
@@ -234,6 +241,7 @@ def create_folly_python_dir(folly_source_path: Path):
     for src, dst in [
         (FOLLY_PYTHON_PATH / "iobuf_ext.h", FOLLY_PYTHON_PATH / "python" / "iobuf_ext.h"),
         (FOLLY_PYTHON_PATH / "iobuf_ext.cpp", FOLLY_PYTHON_PATH / "python" / "iobuf_ext.cpp"),
+        (FOLLY_PYTHON_PATH / "python/fiber_manager_api.h", FOLLY_PYTHON_PATH / "fiber_manager_api.h"),
     ]:
         src.symlink_to(dst)
         print(f"  Symlinked {src} -> {dst}")
@@ -284,6 +292,20 @@ def get_folly_extensions() -> list[Extension]:
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
+            define_macros=DEFINE_MACROS,
+        ),
+        NoStubExtension(
+            'folly.fiber_manager',
+            sources=[
+                'folly/fiber_manager.pyx',
+                'folly/python/fibers.cpp',
+                'folly/python/error.cpp',
+            ],
+            language='c++',
+            extra_compile_args=COMPILE_ARGS,
+            include_dirs=INCLUDE_DIRS,
+            library_dirs=LIBRARY_DIRS,
+            libraries=["folly", "glog", 'boost_coroutine', 'boost_context', 'event'],
             define_macros=DEFINE_MACROS,
         ),
         NoStubExtension(
