@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 from Cython.Build import cythonize
-from setuptools import Extension, setup, Command, find_packages
+from setuptools import Extension, setup, Command
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install import install
 
@@ -84,6 +84,7 @@ def get_platform_paths():
 # ------------------------------------------------------------------------------
 # FOLLY PREPARATION
 # ------------------------------------------------------------------------------
+ORIGINAL_PLACEHOLDER = b"#<ORIGINAL>#"
 def place_insertions(folly_source_path: Path):
     print("[place_insertions] Placing insertions")
     for source_path in INSERTIONS_DIRECTORY.glob("**/*"):
@@ -92,18 +93,25 @@ def place_insertions(folly_source_path: Path):
         with open(source_path, "rb") as read:
             content = read.read()
         relative_ds = source_path.relative_to(INSERTIONS_DIRECTORY)
-        print(f"{relative_ds=}", Path("folly") / "python" / "__init__.py")
-        if relative_ds == Path("folly") / "python" / "__init__.py":
-            content += "\n".join([
-                "", "",
-                '__folly_release_version__ = "{}"'.format(get_version_from_folly_source_path(folly_source_path)),
-                "",
-                "def get_folly_release_version():\n    return __folly_release_version__",
-                ""
-            ]).encode()
         destination = (folly_source_path / relative_ds).absolute()
+
+        content = content.replace(
+            b"#<FOLLY_SOURCE_VERSION>#",
+            get_version_from_folly_source_path(folly_source_path).encode()
+        )
+
+        if content.startswith(ORIGINAL_PLACEHOLDER):
+            print("opening", destination)
+            with open(destination, "rb") as read:
+                content = content.replace(
+                    ORIGINAL_PLACEHOLDER,
+                    read.read(),
+                    1,
+                )
+        
         with open(destination, "wb") as write:
             write.write(content)
+
         print(f"[place_insertions] - Inserted {source_path} at {destination}")
 
 def download_folly(version: Optional[str] = None, redl: bool = False) -> Path:
@@ -219,7 +227,11 @@ def create_folly_python_dir(folly_source_path: Path):
         (folly_py_src / "fibers.cpp", FOLLY_PYTHON_PATH / "python/fibers.cpp"),
 
         # TODO: Fibers tests
-        # TODO: Build mode & add to it the fact it has been built via pyfolly
+
+        # Build mode
+        (folly_py_src / "build_mode.pyx", FOLLY_PYTHON_PATH / "build_mode.pyx"),
+        (folly_py_src / "build_mode.pyi", FOLLY_PYTHON_PATH / "build_mode.pyi"),
+
         # TODO: Additional tests
 
         # Cython modules
@@ -319,6 +331,15 @@ def get_folly_extensions() -> list[Extension]:
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
             define_macros=DEFINE_MACROS,
+        ),
+        NoStubExtension(
+            'folly.build_mode',
+            sources=['folly/build_mode.pyx'],
+            language='c++',
+            libraries=["folly", "glog"],
+            extra_compile_args=COMPILE_ARGS,
+            include_dirs=INCLUDE_DIRS,
+            library_dirs=LIBRARY_DIRS,
         ),
     ]
     return exts
