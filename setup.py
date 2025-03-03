@@ -192,7 +192,7 @@ def create_folly_python_dir(folly_source_path: Path):
 
         # Async generator
         (folly_py_src / "async_generator.pxd", FOLLY_PYTHON_PATH / "async_generator.pxd"),
-        # > Test
+        # > Tests (Needs FOLLY_HAS_COROUTINES)
         (folly_py_src / "test/generator.py", FOLLY_PYTHON_PATH / "python/test/generator.py"),
         (folly_py_src / "test/simplegenerator.pyx", FOLLY_PYTHON_PATH / "python/test/simplegenerator.pyx"),
         (folly_py_src / "test/simplegenerator.h", FOLLY_PYTHON_PATH / "python/test/simplegenerator.h"),
@@ -203,7 +203,7 @@ def create_folly_python_dir(folly_source_path: Path):
 
         # Coro
         (folly_py_src / "coro.pxd", FOLLY_PYTHON_PATH / "coro.pxd"),
-        # > Tests
+        # > Tests (Needs FOLLY_HAS_COROUTINES)
         (folly_py_src / "test/coro.py", FOLLY_PYTHON_PATH / "python/test/coro.py"),
         (folly_py_src / "test/simplebridgecoro.pyx", FOLLY_PYTHON_PATH / "python/test/simplebridgecoro.pyx"),
         (folly_py_src / "test/simplecoro.h", FOLLY_PYTHON_PATH / "python/test/simplecoro.h"),
@@ -253,7 +253,7 @@ def create_folly_python_dir(folly_source_path: Path):
         (folly_py_src / "test/iobuf.py", FOLLY_PYTHON_PATH / "python/test/iobuf.py"),
 
         # Additional tests
-        (folly_py_src / "test/teardown.py", FOLLY_PYTHON_PATH / "python/test/teardown.py"),
+        (folly_py_src / "test/teardown.py", FOLLY_PYTHON_PATH / "python/test/teardown.py"), # (Needs FOLLY_HAS_COROUTINES)
 
         # Additional modules
         (folly_py_src / "cast.pxd", FOLLY_PYTHON_PATH / "cast.pxd"),
@@ -520,6 +520,8 @@ class CleanFollyCommand(Command):
     def run(self):
         # 1) Call the standard "clean" command so normal build artifacts are removed first.
         self.run_command("clean")
+        if (build_dir := (CURRENT_DIRECTORY / "build")).exists():
+            shutil.rmtree(str(build_dir))
 
         # 2) Now remove everything under FOLLY_PYTHON_PATH except README.md, setup.py
         print("[clean folly] Removing FOLLY_PYTHON_PATH contents except for README.md and setup.py...")
