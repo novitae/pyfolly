@@ -47,7 +47,7 @@ def remove_recursive(path: Path, exclude_names=None):
     for file in path.rglob("*"):
         if file.is_dir():
             continue
-        if not exclude_names or file.name not in exclude_names:
+        if exclude_names is None or file.name not in exclude_names:
             file.unlink()
 
 def get_version_from_folly_source_path(folly_source_path: Path) -> str:
@@ -270,6 +270,7 @@ def create_folly_python_dir(folly_source_path: Path):
         (FOLLY_PYTHON_PATH / "iobuf_ext.cpp", FOLLY_PYTHON_PATH / "python" / "iobuf_ext.cpp"),
         (FOLLY_PYTHON_PATH / "python/fiber_manager_api.h", FOLLY_PYTHON_PATH / "fiber_manager_api.h"),
         (FOLLY_PYTHON_PATH / "python/iobuf_api.h", FOLLY_PYTHON_PATH / "iobuf_api.h"),
+        (FOLLY_PYTHON_PATH / "python/executor.cpp", FOLLY_PYTHON_PATH / "executor.cpp"),
     ]:
         src.symlink_to(dst)
         print(f"  Symlinked {src} -> {dst}")

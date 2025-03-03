@@ -68,7 +68,7 @@ def get_extensions():
             'simplebridge',
             sources=[
                 'simplebridge.pyx',
-                '../executor_intf.cpp',
+                '../executor.cpp',
                 '../error.cpp', 
                 '../fibers.cpp'
             ],
@@ -78,6 +78,7 @@ def get_extensions():
             include_dirs=INCLUDE_DIRS,
             libraries=["folly", "glog"],
             library_dirs=LIBRARY_DIRS,
+            define_macros=DEFINE_MACROS,
         ),
         NoStubExtension(
             'iobuf_helper',
@@ -100,7 +101,7 @@ def get_extensions():
             'simplebridgecoro',
             sources=[
                 'simplebridgecoro.pyx',
-                '../executor_intf.cpp',
+                '../executor.cpp',
                 '../error.cpp', 
             ],
             depends=['simplecoro.h'],
@@ -109,6 +110,7 @@ def get_extensions():
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
             libraries=["folly", "glog"],
+            define_macros=DEFINE_MACROS,
         ),
         NoStubExtension(
             'simplegenerator',
@@ -119,6 +121,7 @@ def get_extensions():
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
             libraries=["folly", "glog"],
+            define_macros=DEFINE_MACROS,
         ),
         NoStubExtension(
             'test_set_executor_cython',
@@ -128,6 +131,7 @@ def get_extensions():
             include_dirs=INCLUDE_DIRS,
             libraries=["folly", "glog"],
             library_dirs=LIBRARY_DIRS,
+            define_macros=DEFINE_MACROS,
         ),
     ]
     return exts
