@@ -34,6 +34,20 @@ INCLUDE_DIRS.append(".")
 IGNORE_AUTO_PATH = os.getenv("FOLLY_PY_IGNORE_AUTO_PATH") == "true"
 CUSTOM_FOLLY_VERS = os.getenv("FOLLY_PY_REL_VERS", None)
 
+if (FOLLY_INSTALL_DIR := os.getenv("FOLLY_INSTALL_DIR")):
+    folly_install_dir = Path(FOLLY_INSTALL_DIR)
+    assert folly_install_dir.exists(), f"{FOLLY_INSTALL_DIR=} doesn't exist"
+    assert folly_install_dir.name == "folly"
+    install_dirs = folly_install_dir.parent
+    assert install_dirs.name == "installed"
+    for install_dir in install_dirs.iterdir():
+        if install_dir.is_dir() is False:
+            continue
+        if (install_lib_dir := (install_dir / "lib")).exists():
+            LIBRARY_DIRS.append(str(install_lib_dir))
+        if (install_include_dir := (install_dir / "include")).exists():
+            INCLUDE_DIRS.append(str(install_include_dir))
+
 # ------------------------------------------------------------------------------
 # HELPER FUNCTIONS
 # ------------------------------------------------------------------------------
@@ -307,6 +321,7 @@ class NoStubExtension(Extension):
         super().__init__(*args, **kwargs)
         self._needs_stub = False
 
+LIBRARIES = ['folly', 'glog', 'double-conversion', 'fmt']
 def get_folly_extensions() -> list[Extension]:
     """
     Return our extension objects referencing the .pyx / .cpp in the folly/ folder.
@@ -319,7 +334,7 @@ def get_folly_extensions() -> list[Extension]:
                 "folly/executor.pyx",
                 "folly/python/ProactorExecutor.cpp",
             ],
-            libraries=["folly", "glog"],
+            libraries=LIBRARIES,
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
@@ -336,7 +351,7 @@ def get_folly_extensions() -> list[Extension]:
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
-            libraries=["folly", "glog", 'boost_coroutine', 'boost_context', 'event'],
+            libraries=LIBRARIES + ['boost_coroutine', 'boost_context', 'event'],
             define_macros=DEFINE_MACROS,
         ),
         NoStubExtension(
@@ -345,7 +360,7 @@ def get_folly_extensions() -> list[Extension]:
                 "folly/iobuf.pyx",
                 "folly/iobuf_ext.cpp",
             ],
-            libraries=["folly", "glog"],
+            libraries=LIBRARIES,
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
@@ -355,7 +370,7 @@ def get_folly_extensions() -> list[Extension]:
             'folly.build_mode',
             sources=['folly/build_mode.pyx'],
             language='c++',
-            libraries=["folly", "glog"],
+            libraries=LIBRARIES,
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,

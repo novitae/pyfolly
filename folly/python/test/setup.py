@@ -16,7 +16,7 @@ PYFOLLY_DIR = CURRENT_DIR.parent.parent.parent
 
 COMPILE_ARGS = ['-std=c++20']
 DEFINE_MACROS = []
-LIBRARY_DIRS = []
+LIBRARY_DIRS, RUNTIME_LIBRARY_DIRS = [], []
 INCLUDE_DIRS = []
 IGNORE_AUTO_PATH = os.getenv("FOLLY_PY_IGNORE_AUTO_PATH") == "true"
 
@@ -33,6 +33,20 @@ if libp := os.getenv("FOLLY_PY_LPATH"):
     LIBRARY_DIRS.extend(libp.split(":"))
 if incp := os.getenv("FOLLY_PY_IPATH"):
     INCLUDE_DIRS.extend(incp.split(":"))
+if (FOLLY_INSTALL_DIR := os.getenv("FOLLY_INSTALL_DIR")):
+    folly_install_dir = Path(FOLLY_INSTALL_DIR)
+    assert folly_install_dir.exists(), f"{FOLLY_INSTALL_DIR=} doesn't exist"
+    assert folly_install_dir.name == "folly"
+    install_dirs = folly_install_dir.parent
+    assert install_dirs.name == "installed"
+    for install_dir in install_dirs.iterdir():
+        if install_dir.is_dir() is False:
+            continue
+        if (install_lib_dir := (install_dir / "lib")).exists():
+            RUNTIME_LIBRARY_DIRS.append(str(install_lib_dir))
+        if (install_include_dir := (install_dir / "include")).exists():
+            INCLUDE_DIRS.append(str(install_include_dir))
+    LIBRARY_DIRS += RUNTIME_LIBRARY_DIRS
 
 # Détection de plateforme (similaire au script original)
 if sys.platform == 'darwin':  # macOS
@@ -62,6 +76,7 @@ class NoStubExtension(Extension):
         super().__init__(*args, **kwargs)
         self._needs_stub = False
 
+LIBRARIES = ['folly', 'glog', 'double-conversion', 'fmt']
 def get_extensions():
     exts = [
         NoStubExtension(
@@ -76,9 +91,10 @@ def get_extensions():
             language='c++', 
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
-            libraries=["folly", "glog"],
+            libraries=LIBRARIES,
             library_dirs=LIBRARY_DIRS,
             define_macros=DEFINE_MACROS,
+            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
         NoStubExtension(
             'iobuf_helper',
@@ -94,8 +110,9 @@ def get_extensions():
             ],
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
-            libraries=["folly", "glog"],
+            libraries=LIBRARIES,
             library_dirs=LIBRARY_DIRS,
+            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
         NoStubExtension(
             'simplebridgecoro',
@@ -109,8 +126,9 @@ def get_extensions():
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
-            libraries=["folly", "glog"],
+            libraries=LIBRARIES,
             define_macros=DEFINE_MACROS,
+            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
         NoStubExtension(
             'simplegenerator',
@@ -120,8 +138,9 @@ def get_extensions():
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             library_dirs=LIBRARY_DIRS,
-            libraries=["folly", "glog"],
+            libraries=LIBRARIES,
             define_macros=DEFINE_MACROS,
+            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
         NoStubExtension(
             'test_set_executor_cython',
@@ -129,9 +148,10 @@ def get_extensions():
             depends=['test_set_executor.h'],
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
-            libraries=["folly", "glog"],
+            libraries=LIBRARIES,
             library_dirs=LIBRARY_DIRS,
             define_macros=DEFINE_MACROS,
+            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
     ]
     return exts
