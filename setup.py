@@ -190,16 +190,49 @@ def create_folly_python_dir(folly_source_path: Path):
         (folly_py_src / "__init__.pxd", FOLLY_PYTHON_PATH / "__init__.pxd"),
         (folly_py_src / "error.cpp", FOLLY_PYTHON_PATH / "python" / "error.cpp"),
 
+        # Async generator
+        (folly_py_src / "async_generator.pxd", FOLLY_PYTHON_PATH / "async_generator.pxd"),
+        # > Test
+        (folly_py_src / "test/generator.py", FOLLY_PYTHON_PATH / "python/test/generator.py"),
+        (folly_py_src / "test/simplegenerator.pyx", FOLLY_PYTHON_PATH / "python/test/simplegenerator.pyx"),
+        (folly_py_src / "test/simplegenerator.h", FOLLY_PYTHON_PATH / "python/test/simplegenerator.h"),
+
+        # Build mode
+        (folly_py_src / "build_mode.pyx", FOLLY_PYTHON_PATH / "build_mode.pyx"),
+        (folly_py_src / "build_mode.pyi", FOLLY_PYTHON_PATH / "build_mode.pyi"),
+
+        # Coro
+        (folly_py_src / "coro.pxd", FOLLY_PYTHON_PATH / "coro.pxd"),
+        # > Tests
+        (folly_py_src / "test/coro.py", FOLLY_PYTHON_PATH / "python/test/coro.py"),
+        (folly_py_src / "test/simplebridgecoro.pyx", FOLLY_PYTHON_PATH / "python/test/simplebridgecoro.pyx"),
+        (folly_py_src / "test/simplecoro.h", FOLLY_PYTHON_PATH / "python/test/simplecoro.h"),
+
         # Executor
         (folly_py_src / "executor.pxd", FOLLY_PYTHON_PATH / "executor.pxd"),
         (folly_py_src / "executor.pyx", FOLLY_PYTHON_PATH / "executor.pyx"),
         (folly_py_src / "ProactorExecutor.h", FOLLY_PYTHON_PATH / "python" / "ProactorExecutor.h"),
         (folly_py_src / "ProactorExecutor.cpp", FOLLY_PYTHON_PATH / "python" / "ProactorExecutor.cpp"),
-
-        # Executor tests
+        # > Tests
         (folly_py_src / "test/test_set_executor.h", FOLLY_PYTHON_PATH / "python/test/test_set_executor.h"),
         (folly_py_src / "test/test_set_executor_cython.pyx", FOLLY_PYTHON_PATH / "python/test/test_set_executor_cython.pyx"),
         (folly_py_src / "test/test_set_executor.py", FOLLY_PYTHON_PATH / "python/test/test_set_executor.py"),
+
+        # Fibers
+        (folly_py_src / "fiber_manager.pxd", FOLLY_PYTHON_PATH / "fiber_manager.pxd"),
+        (folly_py_src / "fiber_manager.pyx", FOLLY_PYTHON_PATH / "fiber_manager.pyx"),
+        (folly_py_src / "fibers.pxd", FOLLY_PYTHON_PATH / "fibers.pxd"),
+        (folly_py_src / "fibers.h", FOLLY_PYTHON_PATH / "python/fibers.h"),
+        (folly_py_src / "fibers.cpp", FOLLY_PYTHON_PATH / "python/fibers.cpp"),
+        # > Tests
+        # Included in future tests (simplebridge)
+
+        # Futures
+        (folly_py_src / "futures.pxd", FOLLY_PYTHON_PATH / "futures.pxd"),
+        # > Tests
+        (folly_py_src / "test/futures.py", FOLLY_PYTHON_PATH / "python/test/futures.py"),
+        (folly_py_src / "test/simplebridge.pyx", FOLLY_PYTHON_PATH / "python/test/simplebridge.pyx"),
+        (folly_py_src / "test/simple.h", FOLLY_PYTHON_PATH / "python/test/simple.h"),
 
         # IOBuf
         (folly_py_src / "iobuf.pxd", FOLLY_PYTHON_PATH / "iobuf.pxd"),
@@ -209,37 +242,22 @@ def create_folly_python_dir(folly_source_path: Path):
         (folly_py_src / "iobuf.cpp", FOLLY_PYTHON_PATH / "python" / "iobuf.cpp"),
         (folly_py_src / "iobuf_ext.h", FOLLY_PYTHON_PATH / "python" / "iobuf_ext.h"),
         (folly_py_src / "iobuf_ext.cpp", FOLLY_PYTHON_PATH / "python" / "iobuf_ext.cpp"),
-
-        # IOBuf tests
+        # > Tests
         (folly_py_src / "test/IOBufTestUtils.h", FOLLY_PYTHON_PATH / "python/test/IOBufTestUtils.h"),
         (folly_py_src / "test/IOBufTestUtils.cpp", FOLLY_PYTHON_PATH / "python/test/IOBufTestUtils.cpp"),
         (folly_py_src / "test/iobuf_helper.pxd", FOLLY_PYTHON_PATH / "python/test/iobuf_helper.pxd"),
         (folly_py_src / "test/iobuf_helper.pyx", FOLLY_PYTHON_PATH / "python/test/iobuf_helper.pyx"),
+        (folly_py_src / "test/iobuf_helper.pyi", FOLLY_PYTHON_PATH / "python/test/iobuf_helper.pyi"),
         (folly_py_src / "test/iobuf.py", FOLLY_PYTHON_PATH / "python/test/iobuf.py"),
 
-        # Fibers
-        (folly_py_src / "fiber_manager.pxd", FOLLY_PYTHON_PATH / "fiber_manager.pxd"),
-        (folly_py_src / "fiber_manager.pyx", FOLLY_PYTHON_PATH / "fiber_manager.pyx"),
-        (folly_py_src / "fibers.pxd", FOLLY_PYTHON_PATH / "fibers.pxd"),
-        (folly_py_src / "fibers.h", FOLLY_PYTHON_PATH / "python/fibers.h"),
-        (folly_py_src / "fibers.cpp", FOLLY_PYTHON_PATH / "python/fibers.cpp"),
+        # Additional tests
+        (folly_py_src / "test/teardown.py", FOLLY_PYTHON_PATH / "python/test/teardown.py"),
 
-        # TODO: Fibers tests
-
-        # Build mode
-        (folly_py_src / "build_mode.pyx", FOLLY_PYTHON_PATH / "build_mode.pyx"),
-        (folly_py_src / "build_mode.pyi", FOLLY_PYTHON_PATH / "build_mode.pyi"),
-
-        # TODO: Additional tests
-
-        # Cython modules
-        (folly_py_src / "async_generator.pxd", FOLLY_PYTHON_PATH / "async_generator.pxd"),
+        # Additional modules
         (folly_py_src / "cast.pxd", FOLLY_PYTHON_PATH / "cast.pxd"),
-        (folly_py_src / "coro.pxd", FOLLY_PYTHON_PATH / "coro.pxd"),
         (folly_py_src / "expected.pxd", FOLLY_PYTHON_PATH / "expected.pxd"),
         (folly_py_src / "fbstring.pxd", FOLLY_PYTHON_PATH / "fbstring.pxd"),
         (folly_py_src / "function.pxd", FOLLY_PYTHON_PATH / "function.pxd"),
-        (folly_py_src / "futures.pxd", FOLLY_PYTHON_PATH / "futures.pxd"),
         (folly_py_src / "memory.pxd", FOLLY_PYTHON_PATH / "memory.pxd"),
         (folly_py_src / "optional.pxd", FOLLY_PYTHON_PATH / "optional.pxd"),
         (folly_py_src / "range.pxd", FOLLY_PYTHON_PATH / "range.pxd"),

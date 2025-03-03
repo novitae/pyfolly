@@ -65,6 +65,21 @@ class NoStubExtension(Extension):
 def get_extensions():
     exts = [
         NoStubExtension(
+            'simplebridge',
+            sources=[
+                'simplebridge.pyx',
+                '../executor_intf.cpp',
+                '../error.cpp', 
+                '../fibers.cpp'
+            ],
+            depends=['simple.h'],
+            language='c++', 
+            extra_compile_args=COMPILE_ARGS,
+            include_dirs=INCLUDE_DIRS,
+            libraries=["folly", "glog"],
+            library_dirs=LIBRARY_DIRS,
+        ),
+        NoStubExtension(
             'iobuf_helper',
             sources=[
                 'iobuf_helper.pyx',
@@ -78,9 +93,32 @@ def get_extensions():
             ],
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
-            define_macros=DEFINE_MACROS,
             libraries=["folly", "glog"],
             library_dirs=LIBRARY_DIRS,
+        ),
+        NoStubExtension(
+            'simplebridgecoro',
+            sources=[
+                'simplebridgecoro.pyx',
+                '../executor_intf.cpp',
+                '../error.cpp', 
+            ],
+            depends=['simplecoro.h'],
+            language='c++',
+            extra_compile_args=COMPILE_ARGS,
+            include_dirs=INCLUDE_DIRS,
+            library_dirs=LIBRARY_DIRS,
+            libraries=["folly", "glog"],
+        ),
+        NoStubExtension(
+            'simplegenerator',
+            sources=['simplegenerator.pyx'],
+            depends=['simplegenerator.h'],
+            language='c++',
+            extra_compile_args=COMPILE_ARGS,
+            include_dirs=INCLUDE_DIRS,
+            library_dirs=LIBRARY_DIRS,
+            libraries=["folly", "glog"],
         ),
         NoStubExtension(
             'test_set_executor_cython',
@@ -88,7 +126,6 @@ def get_extensions():
             depends=['test_set_executor.h'],
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
-            define_macros=DEFINE_MACROS,
             libraries=["folly", "glog"],
             library_dirs=LIBRARY_DIRS,
         ),
