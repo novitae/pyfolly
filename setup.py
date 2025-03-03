@@ -213,6 +213,8 @@ def create_folly_python_dir(folly_source_path: Path):
         (folly_py_src / "executor.pyx", FOLLY_PYTHON_PATH / "executor.pyx"),
         (folly_py_src / "ProactorExecutor.h", FOLLY_PYTHON_PATH / "python" / "ProactorExecutor.h"),
         (folly_py_src / "ProactorExecutor.cpp", FOLLY_PYTHON_PATH / "python" / "ProactorExecutor.cpp"),
+        (folly_py_src / "executor.h", FOLLY_PYTHON_PATH / "python" / "executor.h"),
+        (folly_py_src / "executor.cpp", FOLLY_PYTHON_PATH / "python" / "executor.cpp"),
         # > Tests
         (folly_py_src / "test/test_set_executor.h", FOLLY_PYTHON_PATH / "python/test/test_set_executor.h"),
         (folly_py_src / "test/test_set_executor_cython.pyx", FOLLY_PYTHON_PATH / "python/test/test_set_executor_cython.pyx"),
@@ -270,7 +272,7 @@ def create_folly_python_dir(folly_source_path: Path):
         (FOLLY_PYTHON_PATH / "iobuf_ext.cpp", FOLLY_PYTHON_PATH / "python" / "iobuf_ext.cpp"),
         (FOLLY_PYTHON_PATH / "python/fiber_manager_api.h", FOLLY_PYTHON_PATH / "fiber_manager_api.h"),
         (FOLLY_PYTHON_PATH / "python/iobuf_api.h", FOLLY_PYTHON_PATH / "iobuf_api.h"),
-        (FOLLY_PYTHON_PATH / "python/executor.cpp", FOLLY_PYTHON_PATH / "executor.cpp"),
+        (FOLLY_PYTHON_PATH / "python/executor_api.h", FOLLY_PYTHON_PATH / "executor_api.h"),
     ]:
         src.symlink_to(dst)
         print(f"  Symlinked {src} -> {dst}")
