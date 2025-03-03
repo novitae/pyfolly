@@ -31,7 +31,7 @@ LIBRARY_DIRS = _.split(":") if (_ := os.getenv("FOLLY_PY_LPATH")) else []
 INCLUDE_DIRS = _.split(":") if (_ := os.getenv("FOLLY_PY_IPATH")) else []
 INCLUDE_DIRS.append(".")
 
-IGNORE_AUTO_PATH = os.getenv("FOLLY_PY_IGNORE_AUTO_PATH")
+IGNORE_AUTO_PATH = os.getenv("FOLLY_PY_IGNORE_AUTO_PATH") == "true"
 CUSTOM_FOLLY_VERS = os.getenv("FOLLY_PY_REL_VERS", None)
 
 # ------------------------------------------------------------------------------
@@ -77,8 +77,7 @@ def get_platform_paths():
     elif sys.platform.startswith('linux'):
         return (["/home/linuxbrew/.linuxbrew/lib"], ["/home/linuxbrew/.linuxbrew/include"])
     else:
-        raise ValueError(f'Unknown {sys.platform=}')
-        # For Linux/Windows, adapt as needed
+        raise ValueError(f"Unknown {sys.platform=}. Use IGNORE_AUTO_PATH='true' to avoid that.")
         return ([], [])
 
 # ------------------------------------------------------------------------------
@@ -186,7 +185,6 @@ def create_folly_python_dir(folly_source_path: Path):
     # Copy all relevant files
     for src, dst in [
         # The main files:
-        # TODO: Move the __init__.py infos to the build mode
         (folly_py_src / "__init__.py", FOLLY_PYTHON_PATH / "__init__.py"),
         (folly_py_src / "test/__init__.py", FOLLY_PYTHON_PATH / "python/test/__init__.py"),
         (folly_py_src / "__init__.pxd", FOLLY_PYTHON_PATH / "__init__.pxd"),
@@ -249,11 +247,11 @@ def create_folly_python_dir(folly_source_path: Path):
         copy_file_to(src, dst)
         print(f"  Copied {src} -> {dst}")
 
-    # Example: symlink or unify iobuf_ext files if you need them in two places
     for src, dst in [
         (FOLLY_PYTHON_PATH / "iobuf_ext.h", FOLLY_PYTHON_PATH / "python" / "iobuf_ext.h"),
         (FOLLY_PYTHON_PATH / "iobuf_ext.cpp", FOLLY_PYTHON_PATH / "python" / "iobuf_ext.cpp"),
         (FOLLY_PYTHON_PATH / "python/fiber_manager_api.h", FOLLY_PYTHON_PATH / "fiber_manager_api.h"),
+        (FOLLY_PYTHON_PATH / "python/iobuf_api.h", FOLLY_PYTHON_PATH / "iobuf_api.h"),
     ]:
         src.symlink_to(dst)
         print(f"  Symlinked {src} -> {dst}")
@@ -398,10 +396,7 @@ class CustomBuildExt(build_ext):
         if not self.folly_version:
             self.folly_version = CUSTOM_FOLLY_VERS
         if self.ignore_auto_path is None:
-            if IGNORE_AUTO_PATH is None:
-                self.ignore_auto_path = False
-            else:
-                self.ignore_auto_path = IGNORE_AUTO_PATH == "true"
+            self.ignore_auto_path = IGNORE_AUTO_PATH
 
     def run(self):
         # 1) Prepare folly sources
@@ -460,10 +455,7 @@ class CustomInstall(install):
         if not self.folly_version:
             self.folly_version = CUSTOM_FOLLY_VERS
         if self.ignore_auto_path is None:
-            if IGNORE_AUTO_PATH is None:
-                self.ignore_auto_path = False
-            else:
-                self.ignore_auto_path = IGNORE_AUTO_PATH == "true"
+            self.ignore_auto_path = IGNORE_AUTO_PATH
 
     def run(self):
         # 1) Ensure folly is prepared
