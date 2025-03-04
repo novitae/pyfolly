@@ -336,7 +336,22 @@ def ensure_folly_prepared(version: Optional[str], redl: bool = False):
 # ------------------------------------------------------------------------------
 class NoStubExtension(Extension):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        extra_link_args = kwargs.pop("extra_link_args") if "extra_link_args" in kwargs else []
+        if FOLLY_INSTALL_DIR is not None:
+            for path in [
+                "/private/var/folders/zr/gd_xmzjn5qj1mwyskcqgtrkw0000gn/T/fbcode_builder_getdeps-ZUsersZnZmyfollyZbuildZfbcode_builder/installed/glog-wmBdt5_WsYjaONYNJdXh--GLDC9jidKRbt9ztzOKhIw/lib"
+            ]:
+                # dyn_lib = f"-Wl,-rpath,{FOLLY_INSTALL_DIR}/../.pyfolly/lib"
+                dyn_lib = f"-Wl,-rpath,{path}"
+                if dyn_lib not in extra_link_args:
+                    extra_link_args.append(dyn_lib)
+        # if "library_dirs" in kwargs:
+        #     kwargs.pop("library_dirs")
+        super().__init__(
+            *args,
+            extra_link_args=extra_link_args,
+            **kwargs,
+        )
         self._needs_stub = False
 
 LIBRARIES = ['folly', 'glog', 'double-conversion', 'fmt']
@@ -581,5 +596,4 @@ setup(
     },
     python_requires=">=3.9",
     zip_safe=False,
-    include_package_data=True,
 )
