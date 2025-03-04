@@ -15,20 +15,16 @@ CURRENT_DIR = Path(__file__).parent.resolve()
 PYFOLLY_DIR = CURRENT_DIR.parent.parent.parent
 
 COMPILE_ARGS = ['-std=c++20']
-DEFINE_MACROS = []
-LIBRARY_DIRS, RUNTIME_LIBRARY_DIRS = [], []
-INCLUDE_DIRS = []
-IGNORE_AUTO_PATH = os.getenv("FOLLY_PY_IGNORE_AUTO_PATH") == "true"
-
-# Respecte la variable d'env pour un éventuel ajout d'arguments
 if extra_args := os.getenv("FOLLY_PY_COMPARGS"):
     COMPILE_ARGS.append(extra_args)
-
-# Respecte la variable d'env pour inclure la macro _Py_IsFinalizing si Python >= 3.13
+DEFINE_MACROS = []
 if sys.version_info >= (3, 13):
     DEFINE_MACROS.append(("_Py_IsFinalizing", "Py_IsFinalizing"))
 
-# Respecte les variables d'env LPATH / IPATH si définies
+LIBRARY_DIRS = []
+INCLUDE_DIRS = [".", str(PYFOLLY_DIR)]
+IGNORE_AUTO_PATH = os.getenv("FOLLY_PY_IGNORE_AUTO_PATH") == "true"
+
 if libp := os.getenv("FOLLY_PY_LPATH"):
     LIBRARY_DIRS.extend(libp.split(":"))
 if incp := os.getenv("FOLLY_PY_IPATH"):
@@ -39,18 +35,40 @@ if (FOLLY_INSTALL_DIR := os.getenv("FOLLY_INSTALL_DIR")):
     assert folly_install_dir.name == "folly"
     install_dirs = folly_install_dir.parent
     assert install_dirs.name == "installed"
+
+    pyfolly_links = (install_dirs / ".pyfolly").absolute()
+    pyfolly_links_lib = pyfolly_links / "lib"
+    pyfolly_links_lib.mkdir(parents=True, exist_ok=True)
+    pyfolly_links_include = pyfolly_links / "include"
+    pyfolly_links_include.mkdir(exist_ok=True)
+
     for install_dir in install_dirs.iterdir():
         if install_dir.is_dir() is False:
             continue
         if (install_lib_dir := (install_dir / "lib")).exists():
-            RUNTIME_LIBRARY_DIRS.append(str(install_lib_dir))
+            # RUNTIME_LIBRARY_DIRS.append(str(install_lib_dir))
+            for file in install_lib_dir.iterdir():
+                if file.is_file() is False:
+                    continue
+                if (dest := pyfolly_links_lib / file.name).exists() is False:
+                    dest.symlink_to(file)
+
         if (install_include_dir := (install_dir / "include")).exists():
-            INCLUDE_DIRS.append(str(install_include_dir))
-    LIBRARY_DIRS += RUNTIME_LIBRARY_DIRS
+            # INCLUDE_DIRS.append(str(install_include_dir))
+            for file in install_include_dir.iterdir():
+                if (dest := pyfolly_links_include / file.name).exists() is False:
+                    dest.symlink_to(file)
+
+    LIBRARY_DIRS.append(str(pyfolly_links_lib))
+    INCLUDE_DIRS.append(str(pyfolly_links_include))
 
 # Détection de plateforme (similaire au script original)
 if sys.platform == 'darwin':  # macOS
-    COMPILE_ARGS.append("-mmacosx-version-min=10.13")
+    for item in COMPILE_ARGS:
+        if item.startswith("-mmacosx-version-min="):
+            break
+    else:
+        COMPILE_ARGS.append("-mmacosx-version-min=10.13")
 
 if IGNORE_AUTO_PATH is False:
     if sys.platform == 'darwin':  # macOS
@@ -65,8 +83,6 @@ if IGNORE_AUTO_PATH is False:
         INCLUDE_DIRS += ["/home/linuxbrew/.linuxbrew/include"]
     else:
         raise ValueError(f"Unknown platform: {sys.platform}. Use IGNORE_AUTO_PATH='true' to avoid that.")
-
-INCLUDE_DIRS.extend([".", str(PYFOLLY_DIR)])
 
 # ------------------------------------------------------------------------------
 # DEFINE EXTENSIONS DYNAMICALLY
@@ -84,17 +100,16 @@ def get_extensions():
             sources=[
                 'simplebridge.pyx',
                 '../executor.cpp',
-                '../error.cpp', 
+                '../error.cpp',
                 '../fibers.cpp'
             ],
             depends=['simple.h'],
-            language='c++', 
+            language='c++',
             extra_compile_args=COMPILE_ARGS,
             include_dirs=INCLUDE_DIRS,
             libraries=LIBRARIES,
             library_dirs=LIBRARY_DIRS,
             define_macros=DEFINE_MACROS,
-            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
         NoStubExtension(
             'iobuf_helper',
@@ -112,7 +127,6 @@ def get_extensions():
             include_dirs=INCLUDE_DIRS,
             libraries=LIBRARIES,
             library_dirs=LIBRARY_DIRS,
-            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
         NoStubExtension(
             'simplebridgecoro',
@@ -128,7 +142,6 @@ def get_extensions():
             library_dirs=LIBRARY_DIRS,
             libraries=LIBRARIES,
             define_macros=DEFINE_MACROS,
-            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
         NoStubExtension(
             'simplegenerator',
@@ -140,7 +153,6 @@ def get_extensions():
             library_dirs=LIBRARY_DIRS,
             libraries=LIBRARIES,
             define_macros=DEFINE_MACROS,
-            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
         NoStubExtension(
             'test_set_executor_cython',
@@ -151,7 +163,6 @@ def get_extensions():
             libraries=LIBRARIES,
             library_dirs=LIBRARY_DIRS,
             define_macros=DEFINE_MACROS,
-            runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         ),
     ]
     return exts

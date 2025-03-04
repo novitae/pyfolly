@@ -19,6 +19,7 @@ CURRENT_DIRECTORY = Path(__file__).parent.resolve()
 INSERTIONS_DIRECTORY = CURRENT_DIRECTORY / "insertions"
 FOLLY_PYTHON_PATH = CURRENT_DIRECTORY / "folly"
 
+CUSTOM_FOLLY_VERS = os.getenv("FOLLY_PY_REL_VERS", None)
 COMPILE_ARGS = ["-std=c++20"]
 if compargs := os.getenv("FOLLY_PY_COMPARGS"):
     COMPILE_ARGS.append(compargs)
@@ -26,13 +27,9 @@ DEFINE_MACROS = []
 if sys.version_info >= (3, 13):
     DEFINE_MACROS.append(("_Py_IsFinalizing", "Py_IsFinalizing"))
 
-# We keep these as lists so they never become None
-LIBRARY_DIRS = _.split(":") if (_ := os.getenv("FOLLY_PY_LPATH")) else []
-INCLUDE_DIRS = _.split(":") if (_ := os.getenv("FOLLY_PY_IPATH")) else []
-INCLUDE_DIRS.append(".")
-
+LIBRARY_DIRS = []
+INCLUDE_DIRS = ["."]
 IGNORE_AUTO_PATH = os.getenv("FOLLY_PY_IGNORE_AUTO_PATH") == "true"
-CUSTOM_FOLLY_VERS = os.getenv("FOLLY_PY_REL_VERS", None)
 
 if (FOLLY_INSTALL_DIR := os.getenv("FOLLY_INSTALL_DIR")):
     folly_install_dir = Path(FOLLY_INSTALL_DIR)
@@ -40,13 +37,39 @@ if (FOLLY_INSTALL_DIR := os.getenv("FOLLY_INSTALL_DIR")):
     assert folly_install_dir.name == "folly"
     install_dirs = folly_install_dir.parent
     assert install_dirs.name == "installed"
+
+    pyfolly_links = (install_dirs / ".pyfolly").absolute()
+    pyfolly_links_lib = pyfolly_links / "lib"
+    pyfolly_links_lib.mkdir(parents=True, exist_ok=True)
+    pyfolly_links_include = pyfolly_links / "include"
+    pyfolly_links_include.mkdir(exist_ok=True)
+
     for install_dir in install_dirs.iterdir():
         if install_dir.is_dir() is False:
             continue
         if (install_lib_dir := (install_dir / "lib")).exists():
-            LIBRARY_DIRS.append(str(install_lib_dir))
+            # RUNTIME_LIBRARY_DIRS.append(str(install_lib_dir))
+            for file in install_lib_dir.iterdir():
+                if file.is_file() is False:
+                    continue
+                if (dest := pyfolly_links_lib / file.name).exists() is False:
+                    dest.symlink_to(file)
+
         if (install_include_dir := (install_dir / "include")).exists():
-            INCLUDE_DIRS.append(str(install_include_dir))
+            # INCLUDE_DIRS.append(str(install_include_dir))
+            for file in install_include_dir.iterdir():
+                if (dest := pyfolly_links_include / file.name).exists() is False:
+                    dest.symlink_to(file)
+
+    LIBRARY_DIRS.append(str(pyfolly_links_lib))
+    INCLUDE_DIRS.append(str(pyfolly_links_include))
+
+if sys.platform == 'darwin':
+    for item in COMPILE_ARGS:
+        if item.startswith("-mmacosx-version-min="):
+            break
+    else:
+        COMPILE_ARGS.append("-mmacosx-version-min=10.13")
 
 # ------------------------------------------------------------------------------
 # HELPER FUNCTIONS
@@ -79,11 +102,6 @@ def get_platform_paths():
     Adjust as you see fit for Linux/Windows, etc.
     """
     if sys.platform == "darwin":  # macOS
-        for item in COMPILE_ARGS:
-            if item.startswith("-mmacosx-version-min="):
-                break
-        else:
-            COMPILE_ARGS.append("-mmacosx-version-min=10.13")
         if platform.machine() == "arm64":  # Apple Silicon
             return (["/opt/homebrew/lib"], ["/opt/homebrew/include"])
         else:  # Intel macOS

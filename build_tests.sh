@@ -28,6 +28,10 @@ fi
 # Change to test directory
 cd "$TEST_DIR"
 
+# Remove previous builds
+rm -rf "$TEST_DIR/build"
+rm -rf "$TEST_DIR/*.so"
+
 # Run Poetry command to build extensions in place
 echo "Running: poetry run -P \"$SCRIPT_DIR\" python setup.py build_ext --inplace"
 poetry run -P "$SCRIPT_DIR" python setup.py build_ext --inplace
