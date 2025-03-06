@@ -17,4 +17,5 @@ folly/**/*.py
 folly/**/*.pyi
 folly/**/*.pxd
 folly/**/*.pyx
+folly/external_libs
 !folly/python/test/setup.py
