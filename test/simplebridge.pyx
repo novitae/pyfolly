@@ -20,7 +20,7 @@ from libc.stdint cimport uint64_t
 from cpython.ref cimport PyObject
 from cython.operator cimport dereference as deref
 
-cdef extern from "folly/python/test/simple.h" namespace "folly::python::test":
+cdef extern from "simple.h" namespace "folly::python::test":
     cdef cFollyFuture[uint64_t] future_getValueX5(uint64_t val)
     cdef cFollySemiFuture[uint64_t] semiFuture_getValueX5(uint64_t val)
     cdef (uint64_t(*)() noexcept) getValueX5Fibers(uint64_t val)

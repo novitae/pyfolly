@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <folly/python/test/IOBufTestUtils.h>
+#include <IOBufTestUtils.h>
 
 #include <algorithm>
 #include <cctype>

@@ -19,7 +19,7 @@ from libcpp.memory cimport unique_ptr
 from folly.executor cimport set_executor_for_loop, get_executor, cAsyncioExecutor
 
 
-cdef extern from "folly/python/test/test_set_executor.h" namespace "folly::python::test":
+cdef extern from "test_set_executor.h" namespace "folly::python::test":
    cdef cppclass cDeleter "folly::python::test::TestAsyncioExecutor::Deleter":
       pass
 

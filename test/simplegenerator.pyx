@@ -21,7 +21,7 @@ from folly.executor cimport cAsyncioExecutor, get_executor
 from folly.async_generator cimport cAsyncGenerator, cAsyncGeneratorWrapper, cNextResult
 
 
-cdef extern from "folly/python/test/simplegenerator.h" namespace "folly::python::test":
+cdef extern from "simplegenerator.h" namespace "folly::python::test":
     cAsyncGenerator[int] make_generator_empty()
     cAsyncGenerator[int] make_generator()
     cAsyncGenerator[int] make_generator_error()

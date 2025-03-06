@@ -20,7 +20,7 @@ from libc.stdint cimport uint32_t, uint64_t
 from cpython.ref cimport PyObject
 from cython.operator cimport dereference as deref
 
-cdef extern from "folly/python/test/simplecoro.h" namespace "folly::python::test":
+cdef extern from "simplecoro.h" namespace "folly::python::test":
     cdef cFollyCoroTask[uint64_t] coro_getValueX5(uint64_t val)
     cdef cFollyCoroTask[uint64_t] coro_returnFiveAfterCancelled()
     cdef cFollyCoroTask[uint64_t] coro_sleepThenEcho(uint32_t sleep_ms, uint64_t echo_val)

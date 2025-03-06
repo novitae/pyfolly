@@ -1309,7 +1309,7 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include <utility>
 #include "folly/python/iobuf.h"
 #include "folly/python/iobuf_ext.h"
-#include "folly/python/test/IOBufTestUtils.h"
+#include "IOBufTestUtils.h"
 #include "pythread.h"
 #include <stdlib.h>
 #ifdef _OPENMP

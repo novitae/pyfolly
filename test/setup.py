@@ -1,13 +1,11 @@
 from setuptools import setup, Extension as SetuptoolsExtension
-from setuptools.command.build_ext import build_ext
-from setuptools.command.install import install
 from Cython.Build import cythonize
 from typing import Iterable
 
-import folly
+# pytest test --ignore=test/setup.py
+
 import os
 import sys
-import platform
 
 _library_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "folly", "external_libs")
 _library_dirs = [_library_dir]

@@ -27,4 +27,4 @@ setuptools = "^75.8.0"
 
 [tool.pytest.ini_options]
 addopts = '--ignore=folly/python/test/setup.py --ignore-glob=folly-source-* --ignore=insertions'
-python_files = ["folly/python/test/*.py"]
+python_files = ["test/*.py"]

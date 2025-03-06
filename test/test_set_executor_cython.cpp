@@ -1297,7 +1297,7 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include <stdint.h>
 #include "folly/python/AsyncioExecutor.h"
 #include "folly/python/ProactorExecutor.h"
-#include "folly/python/test/test_set_executor.h"
+#include "test_set_executor.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */

@@ -1301,7 +1301,7 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include "folly/python/futures.h"
 #include "folly/python/fibers.h"
 #include <stdint.h>
-#include "folly/python/test/simple.h"
+#include "simple.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */
