@@ -7,6 +7,30 @@ from typing import Iterable
 import sys
 import os
 import shutil
+import subprocess
+
+def fix_lz4_for_unix(external_libs_dir: str):
+    if sys.platform.startswith("darwin"):
+        relative_indicator = "@loader_path"
+    elif sys.platform.startswith("linux"):
+        relative_indicator = "$ORIGIN"
+    else:
+        return
+
+    items: dict[str, str | None] = {"liblz4.": None, "libfolly.": None}
+    for fname in os.listdir(external_libs_dir):
+        for item in items:
+            if fname.startswith(item):
+                full_path = os.path.join(external_libs_dir, fname)
+                if os.path.isfile(full_path) and not os.path.islink(full_path):
+                    items[item] = full_path
+    assert all(items.values()), f"One lib is missing in {items=}"
+    liblz4_path, libfolly_path = items.values()
+    liblz4_name = os.path.basename(liblz4_path)
+    subprocess.run([
+        "install_name_tool", "-change", liblz4_name,
+        f"{relative_indicator}/{liblz4_name}", libfolly_path
+    ], check=True)
 
 def link_include_lib(folly_install_prefix: str):
     gathered_built_deps_dir = os.path.join(folly_install_prefix, ".pyfolly")
@@ -112,6 +136,10 @@ handle_external_libs(installed_path)
 _library_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "folly", "external_libs")
 _library_dirs = [_library_dir]
 _include_dirs = [".", os.path.join(installed_path, ".pyfolly", "include")]
+if sys.platform.startswith("linux"):
+    _runtime_library_dirs = ['-Wl,-rpath,$ORIGIN/external_libs']
+else:
+    _runtime_library_dirs = ['-Wl,-rpath,@loader_path/external_libs']
 def Extension(
     name: str,
     sources: Iterable[str],
@@ -144,10 +172,10 @@ def Extension(
         undef_macros=undef_macros,
         library_dirs=(library_dirs if library_dirs else []) + _library_dirs,
         libraries=(libraries if libraries else []) + ["folly", "glog"],
-        runtime_library_dirs=(runtime_library_dirs if runtime_library_dirs else []) + _library_dirs,
+        runtime_library_dirs=(runtime_library_dirs if runtime_library_dirs else []) + _runtime_library_dirs,
         extra_objects=extra_objects,
         extra_compile_args=(extra_compile_args if extra_compile_args else []) + ["-std=c++20"],
-        extra_link_args=(extra_link_args if extra_link_args else []),
+        extra_link_args=extra_link_args,
         export_symbols=export_symbols,
         swig_opts=swig_opts,
         depends=depends,
