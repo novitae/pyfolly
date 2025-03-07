@@ -8,6 +8,9 @@ import sys
 import os
 import shutil
 import subprocess
+import copy
+import glob
+from pathlib import Path
 
 folly_install_prefix = "/private/var/folders/zr/gd_xmzjn5qj1mwyskcqgtrkw0000gn/T/fbcode_builder_getdeps-ZUsersZnZfollyZbuildZfbcode_builder/installed/"
 
@@ -15,7 +18,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 _library_dir = os.path.join(script_dir, "folly", "external_libs")
 
 if sys.platform.startswith("darwin"):
-    relative_indicator = "@loader_path"
+    relative_indicator = "@rpath"
 elif sys.platform.startswith("linux"):
     relative_indicator = "$ORIGIN"
 else:
@@ -24,17 +27,13 @@ else:
 def fix_lz4_for_unix(external_libs_dir: str):
     if relative_indicator is None:
         return
-
-    items: dict[str, str | None] = {"liblz4.": None, "libfolly.": None}
-    for fname in os.listdir(external_libs_dir):
-        for item in items:
-            if fname.startswith(item):
-                full_path = os.path.join(external_libs_dir, fname)
-                if os.path.isfile(full_path) and not os.path.islink(full_path):
-                    items[item] = full_path
-    assert all(items.values()), f"One lib is missing in {items=}"
-    liblz4_path, libfolly_path = items.values()
+    
+    liblz4_path = os.path.realpath(glob.glob(f"{external_libs_dir}/liblz4.1.*").pop())
     liblz4_name = os.path.basename(liblz4_path)
+    libfolly_path = os.path.realpath(glob.glob(f"{external_libs_dir}/libfolly.*").pop())
+
+    print(f"{liblz4_name=}")
+
     subprocess.run(
         [
             "install_name_tool",
@@ -45,6 +44,55 @@ def fix_lz4_for_unix(external_libs_dir: str):
         ],
         check=True,
     )
+
+def get_folly_py_source():
+    folly_source_dir = os.path.join(script_dir, "folly-source")
+    assert os.path.isdir(folly_source_dir)
+    assert os.path.exists(os.path.join(folly_source_dir, "README.md")), "Folly submodule not init !"
+    folly_source_py_dir = os.path.join(folly_source_dir, "folly", "python")
+    assert os.path.isdir(folly_source_py_dir)
+    return folly_source_py_dir
+
+_prepare_folly_actions: dict[str, dict[str, tuple[str]]] = {
+    "iobuf_ext.cpp": {"sym": ()},
+    "iobuf_ext.h": {"sym": ()},
+}
+def prepare_folly():
+    folly_source_py_dir = get_folly_py_source()
+    pfa = copy.deepcopy(_prepare_folly_actions)
+
+    mirror_dir = os.path.join(script_dir, "folly")
+    mirror_py_dir = os.path.join(mirror_dir, "python")
+    os.makedirs(mirror_py_dir, exist_ok=True)
+
+    for file_name in os.listdir(folly_source_py_dir):
+        if file_name == "setup.py":
+            continue
+        instructions = pfa.pop(file_name, {})
+        dest = [mirror_dir]
+        if file_name.endswith((".h", ".cpp")):
+            dest.append("python")
+        dest.append(file_name)
+
+        src = os.path.join(folly_source_py_dir, file_name)
+        if os.path.isdir(src):
+            continue
+        copy_dst = os.path.join(*dest)
+        shutil.copy2(src=src, dst=copy_dst)
+
+        if (sym := instructions.pop("sym", None)) is not None:
+            sym_dst = os.path.join(mirror_dir, *sym, file_name)
+            if not os.path.exists(sym_dst):
+                os.symlink(src=copy_dst, dst=sym_dst)
+    
+    for pxd_path in glob.glob(f"{mirror_dir}/*.pxd"):
+        pxd_stem_path = pxd_path.removesuffix(".pxd")
+        if not os.path.exists(f"{pxd_stem_path}.pyx"):
+            continue
+        api_path = f"{pxd_stem_path}_api.h"
+        sym_src = os.path.join(mirror_py_dir, os.path.basename(api_path))
+        if not os.path.exists(api_path):
+            os.symlink(src=sym_src, dst=api_path)
 
 def include_dirs(folly_install_prefix: str):
     include = []
@@ -58,33 +106,31 @@ def include_dirs(folly_install_prefix: str):
     return include
 
 def copy_libs(folly_install_prefix: str):
-    os.makedirs(_library_dir, exist_ok=True)
-    for subdir in os.listdir(folly_install_prefix):
-        subdir_path = os.path.join(folly_install_prefix, subdir)
-        if not os.path.isdir(subdir_path):
+    folly_install = Path(folly_install_prefix)
+    external_libs = Path(_library_dir)
+    external_libs.mkdir(parents=True, exist_ok=True)
+    for built_dep in folly_install.iterdir():
+        built_dep_lib = built_dep / "lib"
+        if not built_dep_lib.exists():
             continue
-        lib_path = os.path.join(subdir_path, "lib")
-        if not os.path.isdir(lib_path):
-            continue
-        for item in os.listdir(lib_path):
-            item_path = os.path.join(lib_path, item)
-            if os.path.isdir(item_path):
+        for file in built_dep_lib.iterdir():
+            if file.is_dir() or file.suffix == ".conf":
                 continue
-            if os.path.islink(item_path):
-                target = os.readlink(item_path)
-                if not os.path.isabs(target):
-                    target = os.path.join(os.path.dirname(item_path), target)
-                target = os.path.abspath(target)
-                new_symlink_path = os.path.join(_library_dir, item)
-                if not os.path.exists(new_symlink_path):
-                    rel_target = os.path.relpath(target, os.path.dirname(new_symlink_path))
-                    os.symlink(rel_target, new_symlink_path)
+            new_file = external_libs / file.name
+            if file.is_symlink():
+                target = file.readlink()
+                new_target = external_libs / target.name
+                if not new_file.exists():
+                    new_file.symlink_to(new_target)
             else:
-                dest_file_path = os.path.join(_library_dir, item)
-                if not os.path.exists(dest_file_path):
-                    shutil.copy2(item_path, dest_file_path)
+                with open(new_file, "wb") as write:
+                    with open(file, "rb") as read:
+                        while (content := read.read(0x10000)):
+                            write.write(content)
 
 copy_libs(folly_install_prefix)
+prepare_folly()
+fix_lz4_for_unix(external_libs_dir=_library_dir)
 
 _library_dirs = [_library_dir]
 _include_dirs = [".", *include_dirs(folly_install_prefix=folly_install_prefix)]
