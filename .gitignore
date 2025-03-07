@@ -11,13 +11,4 @@ __pycache__
 .pytest_cache
 .version
 
-folly/**/*.h
-folly/**/*.cpp
-folly/**/*.py
-folly/**/*.pyi
-folly/**/*.pxd
-folly/**/*.pyx
-folly/external_libs
-!folly/python/test/setup.py
-
-_folly
+folly/*
