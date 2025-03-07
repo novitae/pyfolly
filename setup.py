@@ -9,6 +9,11 @@ import os
 import shutil
 import subprocess
 
+folly_install_prefix = "/private/var/folders/zr/gd_xmzjn5qj1mwyskcqgtrkw0000gn/T/fbcode_builder_getdeps-ZUsersZnZfollyZbuildZfbcode_builder/installed/"
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+_library_dir = os.path.join(script_dir, "folly", "external_libs")
+
 if sys.platform.startswith("darwin"):
     relative_indicator = "@loader_path"
 elif sys.platform.startswith("linux"):
@@ -41,89 +46,48 @@ def fix_lz4_for_unix(external_libs_dir: str):
         check=True,
     )
 
-def link_include_lib(folly_install_prefix: str):
-    gathered_built_deps_dir = os.path.join(folly_install_prefix, ".pyfolly")
-    include_dir = os.path.join(gathered_built_deps_dir, "include")
-    lib_dir = os.path.join(gathered_built_deps_dir, "lib")
-
-    os.makedirs(include_dir, exist_ok=True)
-    os.makedirs(lib_dir, exist_ok=True)
-
-    for subdir in os.listdir(folly_install_prefix):
-        subdir_path = os.path.join(folly_install_prefix, subdir)
-        if os.path.isdir(subdir_path) and subdir != ".pyfolly":
-            
-            include_path = os.path.join(subdir_path, "include")
-            if os.path.isdir(include_path):
-                for item in os.listdir(include_path):
-                    src = os.path.join(include_path, item)
-                    dest = os.path.join(include_dir, item)
-                    if not os.path.exists(dest):
-                        os.symlink(src, dest)
-                    
-            lib_path = os.path.join(subdir_path, "lib")
-            if os.path.isdir(lib_path):
-                for item in os.listdir(lib_path):
-                    src = os.path.join(lib_path, item)
-                    if os.path.isdir(src):
-                        continue
-                    # basename = os.path.basename(src)
-                    # if basename.count(".") != 1:
-                    #     continue
-                    dest = os.path.join(lib_dir, item)
-                    if not os.path.exists(dest):
-                        os.symlink(src, dest)
-
-def handle_external_libs(folly_install_prefix: str):
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    external_libs_dir = os.path.join(script_dir, "folly", "external_libs")
-    os.makedirs(external_libs_dir, exist_ok=True)
-
+def include_dirs(folly_install_prefix: str):
+    include = []
     for subdir in os.listdir(folly_install_prefix):
         subdir_path = os.path.join(folly_install_prefix, subdir)
         if not os.path.isdir(subdir_path):
             continue
+        include_path = os.path.join(subdir_path, "include")
+        if os.path.isdir(include_path):
+            include.append(include_path)
+    return include
 
+def copy_libs(folly_install_prefix: str):
+    os.makedirs(_library_dir, exist_ok=True)
+    for subdir in os.listdir(folly_install_prefix):
+        subdir_path = os.path.join(folly_install_prefix, subdir)
+        if not os.path.isdir(subdir_path):
+            continue
         lib_path = os.path.join(subdir_path, "lib")
         if not os.path.isdir(lib_path):
             continue
-
         for item in os.listdir(lib_path):
             item_path = os.path.join(lib_path, item)
             if os.path.isdir(item_path):
                 continue
-
             if os.path.islink(item_path):
                 target = os.readlink(item_path)
                 if not os.path.isabs(target):
                     target = os.path.join(os.path.dirname(item_path), target)
                 target = os.path.abspath(target)
-
-                target_basename = os.path.basename(target)
-                dest_file_path = os.path.join(external_libs_dir, target_basename)
-
-                if not os.path.exists(dest_file_path):
-                    shutil.copy2(target, dest_file_path)
-
-                new_symlink_path = os.path.join(external_libs_dir, item)
+                new_symlink_path = os.path.join(_library_dir, item)
                 if not os.path.exists(new_symlink_path):
-                    rel_target = os.path.relpath(dest_file_path,
-                                                 os.path.dirname(new_symlink_path))
+                    rel_target = os.path.relpath(target, os.path.dirname(new_symlink_path))
                     os.symlink(rel_target, new_symlink_path)
-
             else:
-                dest_file_path = os.path.join(external_libs_dir, item)
+                dest_file_path = os.path.join(_library_dir, item)
                 if not os.path.exists(dest_file_path):
                     shutil.copy2(item_path, dest_file_path)
 
-installed_path = "/private/var/folders/zr/gd_xmzjn5qj1mwyskcqgtrkw0000gn/T/fbcode_builder_getdeps-ZUsersZnZfollyZbuildZfbcode_builder/installed/"
-link_include_lib(installed_path)
-handle_external_libs(installed_path)
+copy_libs(folly_install_prefix)
 
-# _library_dir = os.path.join(installed_path, ".pyfolly", "lib")
-_library_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "folly", "external_libs")
 _library_dirs = [_library_dir]
-_include_dirs = [".", os.path.join(installed_path, ".pyfolly", "include")]
+_include_dirs = [".", *include_dirs(folly_install_prefix=folly_install_prefix)]
 _runtime_library_dirs = []
 if relative_indicator is not None:
     _runtime_library_dirs.append(f'{relative_indicator}/external_libs')

@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["setuptools", "cython", "pathlib", "requests"]
+requires = ["setuptools", "cython"]
 build-backend = "setuptools.build_meta"
 
 [tool.poetry.group.dev.dependencies]
@@ -20,11 +20,9 @@ ipykernel = "^6.29.5"
 
 
 [tool.poetry.group.build.dependencies]
-pathlib = "^1.0.1"
-requests = "^2.32.3"
 cython = "^3.0.12"
 setuptools = "^75.8.0"
 
 [tool.pytest.ini_options]
-addopts = '--ignore=folly/python/test/setup.py --ignore-glob=folly-source-* --ignore=insertions'
+addopts = '--ignore-glob=**/setup.py'
 python_files = ["test/*.py"]
