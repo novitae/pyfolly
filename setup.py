@@ -1,70 +1,78 @@
-from Cython.Build import cythonize
-from setuptools import Extension as SetuptoolsExtension, setup
 from typing import Iterable
+import sys
+import shutil
+import subprocess
 
 # CXXFLAGS="-std=c++20 -fcoroutines" brew install folly -s --cc=llvm_clang
 
-import sys
-import os
-import shutil
-import copy
-import glob
+from setuptools import Extension as SetuptoolsExtension, setup
+from Cython.Build import cythonize
+from pathlib import Path
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
+script_dir = Path(__file__).parent.absolute()
 
 def get_folly_py_source():
-    folly_source_dir = os.path.join(script_dir, "folly-source")
-    assert os.path.isdir(folly_source_dir)
-    assert os.path.exists(os.path.join(folly_source_dir, "README.md")), "Folly submodule not init !"
-    folly_source_py_dir = os.path.join(folly_source_dir, "folly", "python")
-    assert os.path.isdir(folly_source_py_dir)
+    folly_source_dir = script_dir / "folly-source"
+    assert folly_source_dir.is_dir()
+    assert (folly_source_dir / "README.md").exists(), "Folly submodule not init !"
+    folly_source_py_dir = folly_source_dir / "folly" / "python"
+    assert folly_source_py_dir.is_dir()
     return folly_source_py_dir
 
-_prepare_folly_actions: dict[str, dict[str, tuple[str]]] = {
-    "iobuf_ext.cpp": {"sym": ()},
-    "iobuf_ext.h": {"sym": ()},
+_prepare_folly_actions: dict[Path, tuple[str]] = {
+    Path("iobuf_ext.cpp"): (),
+    Path("iobuf_ext.h"): (),
 }
 def prepare_folly():
-    folly_source_py_dir = get_folly_py_source()
-    pfa = copy.deepcopy(_prepare_folly_actions)
+    folly_source_py = get_folly_py_source()
+    folly_source_py_test = folly_source_py / "test"
 
-    mirror_dir = os.path.join(script_dir, "folly")
-    mirror_py_dir = os.path.join(mirror_dir, "python")
-    os.makedirs(mirror_py_dir, exist_ok=True)
+    mirror_dir = script_dir / "folly"
+    mirror_dir_py = mirror_dir / "python"
+    mirror_dir_py_test = mirror_dir_py / "test"
+    mirror_dir_py_test.mkdir(parents=True, exist_ok=True)
 
-    for file_name in os.listdir(folly_source_py_dir):
-        if file_name == "setup.py":
+    for file in folly_source_py.iterdir():
+        name = file.name
+        if name == "setup.py" or file.is_dir():
             continue
-        instructions = pfa.pop(file_name, {})
-        dest = [mirror_dir]
-        if file_name.endswith((".h", ".cpp")):
-            dest.append("python")
-        dest.append(file_name)
 
-        src = os.path.join(folly_source_py_dir, file_name)
-        if os.path.isdir(src):
-            continue
-        copy_dst = os.path.join(*dest)
-        shutil.copy2(src=src, dst=copy_dst)
+        raw_copy_dest = [mirror_dir]
+        if file.suffix in (".h", ".cpp"):
+            raw_copy_dest.append("python")
+        raw_copy_dest.append(file.name)
+        copy_dest = Path(*raw_copy_dest)
+        shutil.copy2(src=file, dst=copy_dest)
 
-        if (sym := instructions.pop("sym", None)) is not None:
-            sym_dst = os.path.join(mirror_dir, *sym, file_name)
-            if not os.path.exists(sym_dst):
-                os.symlink(src=copy_dst, dst=sym_dst)
-    
-    for pxd_path in glob.glob(f"{mirror_dir}/*.pxd"):
-        pxd_stem_path = pxd_path.removesuffix(".pxd")
-        if not os.path.exists(f"{pxd_stem_path}.pyx"):
+        relative = file.relative_to(folly_source_py)
+        if (symlk_instruction := _prepare_folly_actions.get(relative)) is not None:
+            symlk_dest = Path(mirror_dir, *symlk_instruction, file.name)
+            if symlk_dest.exists() is False:
+                symlk_dest.symlink_to(copy_dest)
+
+    for file in folly_source_py_test.iterdir():
+        if file.name == "setup.py":
             continue
-        api_path = f"{pxd_stem_path}_api.h"
-        sym_src = os.path.join(mirror_py_dir, os.path.basename(api_path))
-        if not os.path.exists(api_path):
-            os.symlink(src=sym_src, dst=api_path)
+        shutil.copy2(src=file, dst=(mirror_dir_py_test / file.name))
+
+    for pxd_f in mirror_dir.glob("*.pxd"):
+        pyx_f = pxd_f.with_suffix(".pyx")
+        if pyx_f.exists() is False:
+            continue
+        api_f = pxd_f.with_name(f"{pxd_f.stem}_api.h")
+        if api_f.exists(follow_symlinks=False) is False:
+            api_f.symlink_to(mirror_dir_py / api_f.name)
+
+    patches_dir = script_dir / "patches"
+    for patch_file in patches_dir.glob("**/*.patch"):
+        relative_patch_path = patch_file.relative_to(patches_dir)
+        file_to_patch = mirror_dir / relative_patch_path.with_suffix('')
+        subprocess.run(["patch", str(file_to_patch), "-i", str(patch_file)], check=True)
 
 prepare_folly()
 
-_library_dirs = [os.path.join(script_dir, "folly"), "/opt/homebrew/lib"]
-_include_dirs = [script_dir, "/opt/homebrew/include"]
+_library_dirs = ["/opt/homebrew/lib"]
+_include_dirs = [str(script_dir), "/opt/homebrew/include"]
 
 def Extension(
     name: str,
@@ -98,7 +106,7 @@ def Extension(
         undef_macros=undef_macros,
         library_dirs=(library_dirs if library_dirs else []) + _library_dirs,
         libraries=(libraries if libraries else []) + ["folly", "glog"],
-        runtime_library_dirs=(runtime_library_dirs if runtime_library_dirs else []), # + _runtime_library_dirs,
+        runtime_library_dirs=runtime_library_dirs, # + _runtime_library_dirs,
         extra_objects=extra_objects,
         extra_compile_args=(extra_compile_args if extra_compile_args else []) + ["-std=c++20"],
         extra_link_args=extra_link_args,

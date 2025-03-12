@@ -1,0 +1,11 @@
+--- /Users/n/pyfolly/folly/python/test/simplegenerator.pyx	2025-03-07 12:24:46
++++ /Users/n/pyfolly/patches/python/test/simplegenerator.pyx	2025-03-12 23:16:29
+@@ -52,7 +52,7 @@
+     cdef void callback(
+         cFollyTry[cNextResult[int]]&& res,
+         PyObject* py_future,
+-    ):
++    ) noexcept:
+         future = <object> py_future
+         if res.hasException():
+             try:

@@ -1,0 +1,19 @@
+--- /Users/n/pyfolly/folly/python/test/simplebridgecoro.pyx	2025-03-07 12:24:46
++++ /Users/n/pyfolly/patches/python/test/simplebridgecoro.pyx	2025-03-12 23:14:42
+@@ -12,6 +12,7 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
++
+ import asyncio
+ from folly.coro cimport cFollyCoroTask, bridgeCoroTask, bridgeCoroTaskWithCancellation, cFollyCancellationSource
+ from folly cimport cFollyTry
+@@ -65,7 +66,7 @@
+     return fut
+ 
+ 
+-cdef void handle_uint64_t(cFollyTry[uint64_t]&& res, PyObject* userData):
++cdef void handle_uint64_t(cFollyTry[uint64_t]&& res, PyObject* userData) noexcept:
+     future = <object> userData
+     if res.hasException():
+         try:

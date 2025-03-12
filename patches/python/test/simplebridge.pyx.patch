@@ -1,0 +1,20 @@
+--- /Users/n/pyfolly/folly/python/test/simplebridge.pyx	2025-03-12 23:13:34
++++ /Users/n/pyfolly/patches/python/test/simplebridge.pyx	2025-03-12 23:13:15
+@@ -23,7 +23,7 @@
+ cdef extern from "folly/python/test/simple.h" namespace "folly::python::test":
+     cdef cFollyFuture[uint64_t] future_getValueX5(uint64_t val)
+     cdef cFollySemiFuture[uint64_t] semiFuture_getValueX5(uint64_t val)
+-    cdef (uint64_t(*)()) getValueX5Fibers(uint64_t val)
++    cdef (uint64_t(*)() noexcept) getValueX5Fibers(uint64_t val)
+ 
+ 
+ def get_value_x5(int val):
+@@ -57,7 +57,7 @@
+     return fut
+ 
+ 
+-cdef void handle_uint64_t(cFollyTry[uint64_t]&& res, PyObject* userData):
++cdef void handle_uint64_t(cFollyTry[uint64_t]&& res, PyObject* userData) noexcept:
+     future = <object> userData
+     if res.hasException():
+         try:
