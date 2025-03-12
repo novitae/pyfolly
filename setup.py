@@ -2,23 +2,15 @@ from Cython.Build import cythonize
 from setuptools import Extension as SetuptoolsExtension, setup
 from typing import Iterable
 
-# python3.12 ./build/fbcode_builder/getdeps.py install-system-deps
-# python3.12 ./build/fbcode_builder/getdeps.py build folly --extra-cmake-defines '{"BUILD_SHARED_LIBS": "ON", "CMAKE_CXX_STANDARD": "20", "CMAKE_CXX_FLAGS": "-fcoroutines -fPIC"}' --extra-b2-args "cxxflags=-fPIC" --extra-b2-args "cflags=-fPIC" --allow-system-packages
+# CXXFLAGS="-std=c++20 -fcoroutines" brew install folly -s --cc=llvm_clang
 
 import sys
 import os
 import shutil
-import subprocess
 import copy
 import glob
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-
-subprocess.run(["git", "submodule", "update", "--init", "--recursive"], cwd=script_dir, check=True)
-fbcode_builder = [sys.executable, os.path.join(script_dir, "folly-source", "build", "fbcode_builder", "getdeps.py")]
-subprocess.run([*fbcode_builder, "install-system-deps", "folly"], cwd=script_dir, check=True)
-subprocess.run([*fbcode_builder, "build", "folly", "--extra-cmake-defines", '{"BUILD_SHARED_LIBS": "ON", "CMAKE_CXX_STANDARD": "20", "CMAKE_CXX_FLAGS": "-fcoroutines -fPIC"}', "--extra-b2-args", "cxxflags=-fPIC", "--extra-b2-args", "cflags=-fPIC", "--allow-system-packages"], cwd=script_dir, check=True)
-folly_install_prefix = subprocess.run([*fbcode_builder, "show-inst-dir", "folly"], cwd=script_dir, text=True, capture_output=True).stdout.strip()
 
 def get_folly_py_source():
     folly_source_dir = os.path.join(script_dir, "folly-source")
@@ -72,22 +64,7 @@ def prepare_folly():
 prepare_folly()
 
 _library_dirs = [os.path.join(script_dir, "folly"), "/opt/homebrew/lib"]
-_include_dirs = [script_dir, os.path.join(folly_install_prefix, "include"), "/opt/homebrew/include"]
-
-for file_name in os.listdir(os.path.join(folly_install_prefix, "lib")):
-    file = os.path.join(folly_install_prefix, "lib", file_name)
-    if os.path.isdir(file):
-        continue
-    if not (file_name.startswith("libfolly.") and file_name.count(".") == 1):
-        continue
-    absolute_file = os.path.realpath(file)
-    with open(os.path.join(script_dir, "folly", file_name), "wb") as write:
-        with open(absolute_file, "rb") as read:
-            while (content := read.read(0x10000)):
-                write.write(content)
-    break
-else:
-    assert False
+_include_dirs = [script_dir, "/opt/homebrew/include"]
 
 def Extension(
     name: str,
@@ -170,7 +147,6 @@ setup(
             "*.h",
             "*.pyi",
             "*.cpp",
-            "external_libs/*"
         ]
     },
     setup_requires=["cython"],
