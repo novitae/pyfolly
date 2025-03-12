@@ -5,6 +5,8 @@ import subprocess
 
 # CXXFLAGS="-std=c++20 -fcoroutines" brew install folly -s --cc=llvm_clang
 
+# TODO: Try to build from the getdeps, using the CMAKE_INSTALL_RPATH pointing to brew lib, after installing deps via getdeps
+
 from setuptools import Extension as SetuptoolsExtension, setup
 from Cython.Build import cythonize
 from pathlib import Path
@@ -64,10 +66,15 @@ def prepare_folly():
             api_f.symlink_to(mirror_dir_py / api_f.name)
 
     patches_dir = script_dir / "patches"
-    for patch_file in patches_dir.glob("**/*.patch"):
+    for patch_file in patches_dir.glob("**/*"):
         relative_patch_path = patch_file.relative_to(patches_dir)
-        file_to_patch = mirror_dir / relative_patch_path.with_suffix('')
-        subprocess.run(["patch", str(file_to_patch), "-i", str(patch_file)], check=True)
+        if relative_patch_path.suffix == ".patch":
+            subprocess.run(
+                ["patch", str(mirror_dir / relative_patch_path.with_suffix('')), "-i", str(patch_file)],
+                check=True
+            )
+        elif relative_patch_path.suffix == ".py":
+            shutil.copy2(src=patch_file, dst=mirror_dir / relative_patch_path)
 
 prepare_folly()
 
@@ -95,7 +102,7 @@ def Extension(
     py_limited_api: bool = False
 ):
     if define_macros is None:
-        define_macros = []
+        define_macros = [("FOLLY_HAS_COROUTINES", "1")]
     if sys.version_info >= (3, 13):
         define_macros.append(("_Py_IsFinalizing", "Py_IsFinalizing"))
     return SetuptoolsExtension(
@@ -108,7 +115,7 @@ def Extension(
         libraries=(libraries if libraries else []) + ["folly", "glog"],
         runtime_library_dirs=runtime_library_dirs, # + _runtime_library_dirs,
         extra_objects=extra_objects,
-        extra_compile_args=(extra_compile_args if extra_compile_args else []) + ["-std=c++20"],
+        extra_compile_args=(extra_compile_args if extra_compile_args else []) + ["-std=c++20", "-fcoroutines"],
         extra_link_args=extra_link_args,
         export_symbols=export_symbols,
         swig_opts=swig_opts,

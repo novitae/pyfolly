@@ -1,4 +1,3 @@
-import shutil
 import sys
 from typing import Iterable
 
@@ -7,17 +6,11 @@ from setuptools import Extension as SetuptoolsExtension, setup
 from pathlib import Path
 
 script_dir = Path(__file__).parent.absolute()
-assert (script_dir / "folly" / "__init__.pxd").exists(), "You must run `setup.py` before `setup_test.py`."
-
+pyfolly_dir = script_dir.parent.parent.parent
+assert script_dir.name == "test", "The `setup.py` must be only ran from the test dir"
 
 _library_dirs = ["/opt/homebrew/lib"]
-_include_dirs = [str(script_dir), "/opt/homebrew/include"]
-
-_test_dir = script_dir / "folly" / "python" / "test"
-def test_relative(l: list[str] | None):
-    if l is None:
-        return
-    return [str(_test_dir / item) for item in l]
+_include_dirs = [".", str(pyfolly_dir), "/opt/homebrew/include"]
 
 def Extension(
     name: str,
@@ -40,12 +33,12 @@ def Extension(
     py_limited_api: bool = False
 ):
     if define_macros is None:
-        define_macros = []
+        define_macros = [("FOLLY_HAS_COROUTINES", "1")]
     if sys.version_info >= (3, 13):
         define_macros.append(("_Py_IsFinalizing", "Py_IsFinalizing"))
     return SetuptoolsExtension(
         name=name,
-        sources=test_relative(sources),
+        sources=sources,
         include_dirs=(include_dirs if include_dirs else []) + _include_dirs,
         define_macros=define_macros,
         undef_macros=undef_macros,
@@ -53,11 +46,11 @@ def Extension(
         libraries=(libraries if libraries else []) + ['folly', 'glog', 'double-conversion', 'fmt'],
         runtime_library_dirs=runtime_library_dirs,
         extra_objects=extra_objects,
-        extra_compile_args=(extra_compile_args if extra_compile_args else []) + ["-std=c++20"],
+        extra_compile_args=(extra_compile_args if extra_compile_args else []) + ["-std=c++20", "-fcoroutines"],
         extra_link_args=extra_link_args,
         export_symbols=export_symbols,
         swig_opts=swig_opts,
-        depends=test_relative(depends),
+        depends=depends,
         language=language or "c++",
         optional=optional,
         py_limited_api=py_limited_api
@@ -111,7 +104,6 @@ exts = [
 setup(
     name='folly_test',
     setup_requires=['cython'],
-    packages=["folly"],
     ext_modules=cythonize(
         exts,
         verbose=True,

@@ -25,5 +25,6 @@ setuptools = "^75.8.0"
 pathlib = "^1.0.1"
 
 [tool.pytest.ini_options]
-addopts = '--ignore-glob=**/setup.py'
-python_files = ["test/*.py"]
+testpaths = ["folly/python/test"]
+python_files = ["*.py"]
+addopts = "--ignore-glob=**/setup.py"
