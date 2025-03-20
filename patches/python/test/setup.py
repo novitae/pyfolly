@@ -9,11 +9,11 @@ script_dir = Path(__file__).parent.absolute()
 pyfolly_dir = script_dir.parent.parent.parent
 assert script_dir.name == "test", "The `setup.py` must be only ran from the test dir"
 
-_folly_installed_path = pyfolly_dir / "folly_build"
+_folly_installed_path = pyfolly_dir / "install"
 _folly_lib = str(pyfolly_dir / "folly" / "lib")
 assert (pyfolly_dir / "folly" / "lib" / "libfolly.dylib").exists(), \
     "Please run non test setup.py before running the test one."
-_folly_include = str(_folly_installed_path / "include")
+_folly_include = str(_folly_installed_path / ".pyfolly" / "include")
 
 _runtime_library_dirs = [_folly_lib]
 _library_dirs = [_folly_lib, "/opt/homebrew/lib"]

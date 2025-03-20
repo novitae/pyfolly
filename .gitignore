@@ -11,5 +11,6 @@ __pycache__
 .pytest_cache
 .version
 folly_build/*
+install/*
 
 folly/*
