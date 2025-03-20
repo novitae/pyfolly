@@ -3,9 +3,9 @@ import sys
 import shutil
 import subprocess
 
-# CXXFLAGS="-std=c++20 -fcoroutines" brew install folly -s --cc=llvm_clang
-
-# TODO: Try to build from the getdeps, using the CMAKE_INSTALL_RPATH pointing to brew lib, after installing deps via getdeps
+# python3.12 ./build/fbcode_builder/getdeps.py install-system-deps
+# python3.12 ./build/fbcode_builder/getdeps.py build folly --extra-cmake-defines '{"BUILD_SHARED_LIBS": "ON", "CMAKE_CXX_STANDARD": "20", "CMAKE_CXX_FLAGS": "-fcoroutines -fPIC", "CMAKE_INSTALL_RPATH": "/opt/homebrew/lib"}' --extra-b2-args "cxxflags=-fPIC" --extra-b2-args "cflags=-fPIC" --allow-system-packages
+# _folly_installed_path = $(python3.12 ./build/fbcode_builder/getdeps.py show-inst-dir)
 
 from setuptools import Extension as SetuptoolsExtension, setup
 from Cython.Build import cythonize
@@ -78,8 +78,12 @@ def prepare_folly():
 
 prepare_folly()
 
-_library_dirs = ["/opt/homebrew/lib"]
-_include_dirs = [str(script_dir), "/opt/homebrew/include"]
+_folly_installed_path = "/private/var/folders/zr/gd_xmzjn5qj1mwyskcqgtrkw0000gn/T/fbcode_builder_getdeps-ZUsersZnZfollyZbuildZfbcode_builder/installed/folly"
+_folly_lib = f"{_folly_installed_path}/lib"
+_folly_include = f"{_folly_installed_path}/include"
+_runtime_library_dirs = [_folly_lib]
+_library_dirs = [_folly_lib, "/opt/homebrew/lib"]
+_include_dirs = [str(script_dir), _folly_include, "/opt/homebrew/include"]
 
 def Extension(
     name: str,
@@ -113,9 +117,9 @@ def Extension(
         undef_macros=undef_macros,
         library_dirs=(library_dirs if library_dirs else []) + _library_dirs,
         libraries=(libraries if libraries else []) + ["folly", "glog"],
-        runtime_library_dirs=runtime_library_dirs, # + _runtime_library_dirs,
+        runtime_library_dirs=(runtime_library_dirs if runtime_library_dirs else []) + _runtime_library_dirs,
         extra_objects=extra_objects,
-        extra_compile_args=(extra_compile_args if extra_compile_args else []) + ["-std=c++20", "-fcoroutines"],
+        extra_compile_args=(extra_compile_args if extra_compile_args else []) + ["-std=c++20"],
         extra_link_args=extra_link_args,
         export_symbols=export_symbols,
         swig_opts=swig_opts,
