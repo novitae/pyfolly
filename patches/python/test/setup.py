@@ -9,9 +9,12 @@ script_dir = Path(__file__).parent.absolute()
 pyfolly_dir = script_dir.parent.parent.parent
 assert script_dir.name == "test", "The `setup.py` must be only ran from the test dir"
 
-_folly_installed_path = "/private/var/folders/zr/gd_xmzjn5qj1mwyskcqgtrkw0000gn/T/fbcode_builder_getdeps-ZUsersZnZfollyZbuildZfbcode_builder/installed/folly"
-_folly_lib = f"{_folly_installed_path}/lib"
-_folly_include = f"{_folly_installed_path}/include"
+_folly_installed_path = pyfolly_dir / "folly_build"
+_folly_lib = str(pyfolly_dir / "folly" / "lib")
+assert (pyfolly_dir / "folly" / "lib" / "libfolly.dylib").exists(), \
+    "Please run non test setup.py before running the test one."
+_folly_include = str(_folly_installed_path / "include")
+
 _runtime_library_dirs = [_folly_lib]
 _library_dirs = [_folly_lib, "/opt/homebrew/lib"]
 _include_dirs = [".", str(pyfolly_dir), _folly_include, "/opt/homebrew/include"]
@@ -37,7 +40,7 @@ def Extension(
     py_limited_api: bool = False
 ):
     if define_macros is None:
-        define_macros = [("FOLLY_HAS_COROUTINES", "1")]
+        define_macros = []
     if sys.version_info >= (3, 13):
         define_macros.append(("_Py_IsFinalizing", "Py_IsFinalizing"))
     return SetuptoolsExtension(

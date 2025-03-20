@@ -2,10 +2,14 @@ from typing import Iterable
 import sys
 import shutil
 import subprocess
+import json
+import sysconfig
 
 # python3.12 ./build/fbcode_builder/getdeps.py install-system-deps
 # python3.12 ./build/fbcode_builder/getdeps.py build folly --extra-cmake-defines '{"BUILD_SHARED_LIBS": "ON", "CMAKE_CXX_STANDARD": "20", "CMAKE_CXX_FLAGS": "-fcoroutines -fPIC", "CMAKE_INSTALL_RPATH": "/opt/homebrew/lib"}' --extra-b2-args "cxxflags=-fPIC" --extra-b2-args "cflags=-fPIC" --allow-system-packages
 # _folly_installed_path = $(python3.12 ./build/fbcode_builder/getdeps.py show-inst-dir)
+
+# python3.12 ./build/fbcode_builder/getdeps.py build folly --extra-cmake-defines '{"BUILD_SHARED_LIBS": "ON", "CMAKE_CXX_STANDARD": "20", "CMAKE_CXX_FLAGS": "-fcoroutines -fPIC", "CMAKE_INSTALL_RPATH": "/opt/homebrew/lib"}' --extra-b2-args "cxxflags=-fPIC" --extra-b2-args "cflags=-fPIC" --allow-system-packages --install-dir "/Users/n/pyfolly/folly_build"
 
 from setuptools import Extension as SetuptoolsExtension, setup
 from Cython.Build import cythonize
@@ -13,13 +17,48 @@ from pathlib import Path
 
 script_dir = Path(__file__).parent.absolute()
 
-def get_folly_py_source():
+def get_folly_source():
     folly_source_dir = script_dir / "folly-source"
     assert folly_source_dir.is_dir()
     assert (folly_source_dir / "README.md").exists(), "Folly submodule not init !"
+    return folly_source_dir
+
+def get_folly_py_source():
+    folly_source_dir = get_folly_source()
     folly_source_py_dir = folly_source_dir / "folly" / "python"
     assert folly_source_py_dir.is_dir()
     return folly_source_py_dir
+
+def build_folly():
+    folly_build_dir = script_dir / "folly_build"
+    dylib = folly_build_dir / "lib" / "libfolly.dylib"
+    if dylib.exists() is False:
+        subprocess.run(["git", "submodule", "update", "--init", "--recursive"], cwd=script_dir, check=True)
+        folly_source = get_folly_source()
+        code_builder = str(Path(".", "build", "fbcode_builder", "getdeps.py"))
+        subprocess.run([sys.executable, code_builder, "install-system-deps", "folly"], cwd=folly_source, check=True)
+        subprocess.run(
+            [
+                sys.executable, code_builder, "build", "folly",
+                "--extra-cmake-defines", json.dumps({
+                    "BUILD_SHARED_LIBS": "ON",
+                    "CMAKE_CXX_STANDARD": "20",
+                    "CMAKE_CXX_FLAGS": "-fcoroutines -fPIC",
+                    # TODO: Adapt it to different platforms.
+                    "CMAKE_INSTALL_RPATH": "/opt/homebrew/lib",
+                }),
+                "--extra-b2-args", "cxxflags=-fPIC -I{i}".format(i=sysconfig.get_path('include')),
+                "--extra-b2-args", "cflags=-fPIC",
+                "--allow-system-packages",
+                "--install-dir", str(folly_build_dir),
+                "--no-tests",
+                "--no-build-cache",
+            ],
+            cwd=folly_source,
+            check=True,
+        )
+    assert dylib.exists()
+    return folly_build_dir
 
 _prepare_folly_actions: dict[Path, tuple[str]] = {
     Path("iobuf_ext.cpp"): (),
@@ -76,11 +115,33 @@ def prepare_folly():
         elif relative_patch_path.suffix == ".py":
             shutil.copy2(src=patch_file, dst=mirror_dir / relative_patch_path)
 
+    folly_build_dir = build_folly()
+    folly_build_lib_dir = folly_build_dir / "lib"
+
+    folly_lib = mirror_dir / "lib"
+    folly_lib.mkdir(exist_ok=True)
+
+    folly_build_dylib = folly_build_lib_dir / "libfolly.dylib"
+    # Link in `folly_build_dylib` is just a filename, it doesn't include the
+    # full path, no matter if `folly_build_dylib` is set absolute. We use
+    # `.name` in the case this behavior changes in the future, to only get
+    # the name.
+    folly_build_dylib_name = folly_build_dylib.readlink().name
+    mirror_lib_dylib_source = folly_lib / folly_build_dylib_name
+    with open(folly_build_lib_dir / folly_build_dylib_name, "rb") as read:
+        with open(mirror_lib_dylib_source, "wb") as write:
+            while (chunk := read.read(0x10000)):
+                write.write(chunk)
+    mirror_lib_dylib_alias = folly_lib / folly_build_dylib.name
+    if mirror_lib_dylib_alias.exists() is False:
+        mirror_lib_dylib_alias.symlink_to(mirror_lib_dylib_source)
+
 prepare_folly()
 
-_folly_installed_path = "/private/var/folders/zr/gd_xmzjn5qj1mwyskcqgtrkw0000gn/T/fbcode_builder_getdeps-ZUsersZnZfollyZbuildZfbcode_builder/installed/folly"
-_folly_lib = f"{_folly_installed_path}/lib"
-_folly_include = f"{_folly_installed_path}/include"
+_folly_installed_path = build_folly()
+_folly_lib = str(script_dir / "folly" / "lib")
+_folly_include = str(_folly_installed_path / "include")
+
 _runtime_library_dirs = [_folly_lib]
 _library_dirs = [_folly_lib, "/opt/homebrew/lib"]
 _include_dirs = [str(script_dir), _folly_include, "/opt/homebrew/include"]
@@ -106,7 +167,7 @@ def Extension(
     py_limited_api: bool = False
 ):
     if define_macros is None:
-        define_macros = [("FOLLY_HAS_COROUTINES", "1")]
+        define_macros = []
     if sys.version_info >= (3, 13):
         define_macros.append(("_Py_IsFinalizing", "Py_IsFinalizing"))
     return SetuptoolsExtension(
@@ -166,6 +227,7 @@ setup(
             "*.h",
             "*.pyi",
             "*.cpp",
+            "lib/*",
         ]
     },
     setup_requires=["cython"],
