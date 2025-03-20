@@ -30,13 +30,13 @@ def get_folly_py_source():
     return folly_source_py_dir
 
 def build_folly():
-    folly_build_dir = script_dir / "folly_build"
-    dylib = folly_build_dir / "lib" / "libfolly.dylib"
+    folly_build_dir = script_dir / "install"
+    dylib = folly_build_dir / "folly" / "lib" / "libfolly.dylib"
     if dylib.exists() is False:
         subprocess.run(["git", "submodule", "update", "--init", "--recursive"], cwd=script_dir, check=True)
         folly_source = get_folly_source()
         code_builder = str(Path(".", "build", "fbcode_builder", "getdeps.py"))
-        subprocess.run([sys.executable, code_builder, "install-system-deps", "folly"], cwd=folly_source, check=True)
+        # subprocess.run([sys.executable, code_builder, "install-system-deps", "folly"], cwd=folly_source, check=True)
         subprocess.run(
             [
                 sys.executable, code_builder, "build", "folly",
@@ -45,12 +45,12 @@ def build_folly():
                     "CMAKE_CXX_STANDARD": "20",
                     "CMAKE_CXX_FLAGS": "-fcoroutines -fPIC",
                     # TODO: Adapt it to different platforms.
-                    "CMAKE_INSTALL_RPATH": "/opt/homebrew/lib",
+                    "CMAKE_INSTALL_RPATH": "@loader_path",
                 }),
                 "--extra-b2-args", "cxxflags=-fPIC -I{i}".format(i=sysconfig.get_path('include')),
                 "--extra-b2-args", "cflags=-fPIC",
-                "--allow-system-packages",
-                "--install-dir", str(folly_build_dir),
+                # "--allow-system-packages",
+                "--install-prefix", str(folly_build_dir),
                 "--no-tests",
                 "--no-build-cache",
             ],
@@ -116,31 +116,38 @@ def prepare_folly():
             shutil.copy2(src=patch_file, dst=mirror_dir / relative_patch_path)
 
     folly_build_dir = build_folly()
-    folly_build_lib_dir = folly_build_dir / "lib"
+    folly_build_dir_includes = folly_build_dir / ".pyfolly" / "include"
+    folly_build_dir_includes.mkdir(parents=True, exist_ok=True)
+    mirror_lib_dir = mirror_dir / "lib"
+    mirror_lib_dir.mkdir(exist_ok=True)
 
-    folly_lib = mirror_dir / "lib"
-    folly_lib.mkdir(exist_ok=True)
-
-    folly_build_dylib = folly_build_lib_dir / "libfolly.dylib"
-    # Link in `folly_build_dylib` is just a filename, it doesn't include the
-    # full path, no matter if `folly_build_dylib` is set absolute. We use
-    # `.name` in the case this behavior changes in the future, to only get
-    # the name.
-    folly_build_dylib_name = folly_build_dylib.readlink().name
-    mirror_lib_dylib_source = folly_lib / folly_build_dylib_name
-    with open(folly_build_lib_dir / folly_build_dylib_name, "rb") as read:
-        with open(mirror_lib_dylib_source, "wb") as write:
-            while (chunk := read.read(0x10000)):
-                write.write(chunk)
-    mirror_lib_dylib_alias = folly_lib / folly_build_dylib.name
-    if mirror_lib_dylib_alias.exists() is False:
-        mirror_lib_dylib_alias.symlink_to(mirror_lib_dylib_source)
+    for dependency in folly_build_dir.iterdir():
+        if dependency.name == ".pyfolly":
+            continue
+        if (dep_include_dir := dependency / "include").exists():
+            for inc_file in dep_include_dir.iterdir():
+                inc_file_sym = folly_build_dir_includes / inc_file.name
+                if inc_file_sym.exists():
+                    continue
+                inc_file_sym.symlink_to(inc_file, target_is_directory=inc_file.is_dir())
+        if (dep_lib_dir := dependency / "lib").exists():
+            for lib_file in dep_lib_dir.iterdir():
+                lib_file_sym = mirror_lib_dir / lib_file.name
+                if lib_file_sym.exists():
+                    continue
+                if lib_file.is_symlink():
+                    lib_file_sym.symlink_to(mirror_lib_dir / lib_file.readlink().name)
+                elif lib_file.is_file():
+                    with open(lib_file, "rb") as read:
+                        with open(lib_file_sym, "wb") as write:
+                            while (chunk := read.read(0x1000)):
+                                write.write(chunk)
 
 prepare_folly()
 
 _folly_installed_path = build_folly()
 _folly_lib = str(script_dir / "folly" / "lib")
-_folly_include = str(_folly_installed_path / "include")
+_folly_include = str(_folly_installed_path / ".pyfolly" / "include")
 
 _runtime_library_dirs = [_folly_lib]
 _library_dirs = [_folly_lib, "/opt/homebrew/lib"]
