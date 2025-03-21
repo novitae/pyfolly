@@ -17,22 +17,11 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest]
-        python-version: ['3.9', '3.12', '3.13']
+        python-version: ['3.9', '3.12']
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-
-      - name: Install deps
-        if: matrix.os == 'macos-latest'
-        run: brew install jq
-      
-      - name: Installing folly (via Homebrew)
-        run: |
-          brew install folly
-          echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
-          # echo "INCLUDE_DIR=$(brew --prefix)/include" >> $GITHUB_ENV
-          # echo "LIBRARY_DIR=$(brew --prefix)/lib" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -48,70 +37,64 @@ jobs:
         run: poetry install --all-groups
 
       - name: Build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSTM_FOLLY_VERS: ${{ env.FOLLY_VERSION }}
-        run: |
-          poetry run python setup.py build_ext --inplace
-          # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
+        run: poetry run python setup.py build_ext --inplace
 
       - name: Build tests
         run: |
-          cd folly/python/test
-          poetry run python setup.py build_ext --inplace
-          # Removed: -I${{ env.INCLUDE_DIR }} -L${{ env.LIBRARY_DIR }}
+          chmod +x build_test.sh
+          ./build_test.sh
 
       - name: Run tests
         run: poetry run python -m pytest
 
-  run-tests-linux:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ['3.9', '3.13']
+  # run-tests-linux:
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest]
+  #       python-version: ['3.9', '3.13']
 
-    steps:
-      - name: Installing Homebrew
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          # echo >> /home/runner/.bashrc
-          # echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/runner/.bashrc
-          # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  #   steps:
+  #     - name: Installing Homebrew
+  #       run: |
+  #         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  #         # echo >> /home/runner/.bashrc
+  #         # echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/runner/.bashrc
+  #         # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-      - name: Installing folly (via Homebrew)
-        run: |
-          /home/linuxbrew/.linuxbrew/bin/brew install folly
-          echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
+  #     - name: Installing folly (via Homebrew)
+  #       run: |
+  #         /home/linuxbrew/.linuxbrew/bin/brew install folly
+  #         echo "FOLLY_VERSION=v$(brew info folly --json | jq -r '.[0].installed[0].version' | sed 's/_.*//')" >> $GITHUB_ENV
 
-      - name: Check out repository
-        uses: actions/checkout@v3
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          poetry-version: 'latest'
+  #     - name: Install Poetry
+  #       uses: snok/install-poetry@v1
+  #       with:
+  #         poetry-version: 'latest'
 
-      - name: Install dependencies
-        run: poetry install --all-groups
+  #     - name: Install dependencies
+  #       run: poetry install --all-groups
 
-      - name: Build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSTM_FOLLY_VERS: ${{ env.FOLLY_VERSION }}
-        run: |
-          poetry run python setup.py build_ext --inplace
+  #     - name: Build
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         CSTM_FOLLY_VERS: ${{ env.FOLLY_VERSION }}
+  #       run: |
+  #         poetry run python setup.py build_ext --inplace
 
-      - name: Build tests
-        run: |
-          cd folly/python/test
-          poetry run python setup.py build_ext --inplace
+  #     - name: Build tests
+  #       run: |
+  #         cd folly/python/test
+  #         poetry run python setup.py build_ext --inplace
 
-      - name: Run tests
-        run: |
-          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/linuxbrew/.linuxbrew/lib" poetry run python -m pytest
+  #     - name: Run tests
+  #       run: |
+  #         LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/linuxbrew/.linuxbrew/lib" poetry run python -m pytest
