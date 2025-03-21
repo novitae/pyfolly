@@ -39,7 +39,7 @@ def build_folly():
         subprocess.run(["git", "submodule", "update", "--init", "--recursive"], cwd=script_dir, check=True)
         folly_source = get_folly_source()
         code_builder = str(Path(".", "build", "fbcode_builder", "getdeps.py"))
-        # subprocess.run([sys.executable, code_builder, "install-system-deps", "folly"], cwd=folly_source, check=True)
+        subprocess.run([sys.executable, code_builder, "install-system-deps", "folly"], cwd=folly_source, check=True)
         subprocess.run(
             [
                 sys.executable, code_builder, "build", "folly",
@@ -50,6 +50,7 @@ def build_folly():
                     # TODO: Adapt it to different platforms.
                     "CMAKE_INSTALL_RPATH": "@loader_path",
                 }),
+                "--allow-system-packages",
                 "--extra-b2-args", "cxxflags=-fPIC -std=c++20 -I{i}".format(i=sysconfig.get_path('include')),
                 "--extra-b2-args", "cflags=-fPIC",
                 "--install-prefix", str(folly_build_dir),
@@ -125,6 +126,9 @@ def prepare_folly():
 
     for dependency in folly_build_dir.iterdir():
         if dependency.name == ".pyfolly":
+            continue
+        # Boost should be from brew.
+        elif dependency.name.startswith(("boost-")):
             continue
         if (dep_include_dir := dependency / "include").exists():
             for inc_file in dep_include_dir.iterdir():
