@@ -11,6 +11,9 @@ import sysconfig
 
 # python3.12 ./build/fbcode_builder/getdeps.py build folly --extra-cmake-defines '{"BUILD_SHARED_LIBS": "ON", "CMAKE_CXX_STANDARD": "20", "CMAKE_CXX_FLAGS": "-fcoroutines -fPIC", "CMAKE_INSTALL_RPATH": "/opt/homebrew/lib"}' --extra-b2-args "cxxflags=-fPIC" --extra-b2-args "cflags=-fPIC" --allow-system-packages --install-dir "/Users/n/pyfolly/folly_build"
 
+# TODO: Use `--shared-libs` instead of `BUILD_SHARED_LIBS`, it might
+#       fix all the issues of `CMAKE_INSTALL_RPATH` with `lz4`.
+
 from setuptools import Extension as SetuptoolsExtension, setup
 from Cython.Build import cythonize
 from pathlib import Path
@@ -47,9 +50,8 @@ def build_folly():
                     # TODO: Adapt it to different platforms.
                     "CMAKE_INSTALL_RPATH": "@loader_path",
                 }),
-                "--extra-b2-args", "cxxflags=-fPIC -I{i}".format(i=sysconfig.get_path('include')),
+                "--extra-b2-args", "cxxflags=-fPIC -std=c++20 -I{i}".format(i=sysconfig.get_path('include')),
                 "--extra-b2-args", "cflags=-fPIC",
-                # "--allow-system-packages",
                 "--install-prefix", str(folly_build_dir),
                 "--no-tests",
                 "--no-build-cache",
